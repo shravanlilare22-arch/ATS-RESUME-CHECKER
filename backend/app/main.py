@@ -15,6 +15,7 @@ app.add_middleware(
 app.include_router(resume.router)
 app.include_router(score.router)
 
+
 @app.get("/")
 def read_root():
     return {"message": "ATS Resume Checker API is running"}
