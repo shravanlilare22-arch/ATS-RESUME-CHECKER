@@ -1,86 +1,89 @@
-# ATS-RESUME-CHECKER
-1 author: shravan lilare
-2 author: parth masram
-3 author: sunny paji
-# working flow 
-User Resume Upload Karta Hai + Job Description Deta Hai
-                    ↓
-        Backend Dono Ko Process Karta Hai
-                    ↓
-        Keywords Match Karta Hai (Resume vs JD)
-                    ↓
-        ATS Score + Suggestions Generate Hote Hain
-                    ↓
-        Frontend Pe Result Dikhta Hai User Ko
+# ATS Resume Checker
 
-   # detailed explanation
-   # ATS Resume Checker — Poora Working Flow
+An ATS (Applicant Tracking System) Resume Checker that analyzes a resume against a job description, calculates a match score, and highlights matched vs. missing keywords — helping candidates optimize their resumes before applying.
 
+🔗 **Live Demo:** [https://vercel.com/black-hat-assassins/ats-resume-checker/6Y6vf82G9hscdeBV2FrrXZcGUkgh]
+🔗 **Backend API:** [https://ats-resume-checker-aoq9.onrender.com]
 
-## Detailed Step-by-Step Flow
+## 📸 Screenshot
 
-### **Step 1: User Resume Upload Karta Hai**
-- Frontend (`UploadResume.jsx`) pe user apna resume (PDF/DOCX) select karta hai
-- Saath mein ek Job Description bhi paste karta hai (`JobDescriptionInput.jsx`)
+![alt text](image-1.png)
 
-### **Step 2: Frontend → Backend Request Bhejta Hai**
-- `frontend/src/services/api.js` file resume file aur JD ko backend API ko bhejti hai (jo humne abhi test kiya tha Swagger docs se)
+## ✨ Features
 
-### **Step 3: Backend Resume Ko Parse Karta Hai** ✅ (Yeh hum kar chuke hain)
-- `resume.py` (route) file ko receive karta hai
-- `parser.py` PDF/DOCX se **raw text nikalta hai**
+- Upload a resume in PDF or DOCX format
+- Paste any job description
+- Get an instant match score (%)
+- See matched keywords (skills present in both resume and JD)
+- See missing keywords (skills the JD wants but the resume lacks)
 
-### **Step 4: Keywords Extract Hote Hain** ⬅️ (Agla Step)
-- `keyword_extractor.py` resume ke text mein se important cheezein dhundta hai:
-  - Skills (Python, SQL, React, etc.)
-  - Job titles, experience duration
-  - Education details
-- Yeh `keyword_dictionaries/` (jo `data/` folder mein hai) ka use karta hai reference ke liye
+## 🛠️ Tech Stack
 
-### **Step 5: Job Description Bhi Process Hoti Hai**
-- Job description mein se bhi required skills/keywords nikalte hain (same `keyword_extractor.py` use hoga)
+**Frontend:** React, Vite, Axios
+**Backend:** FastAPI (Python), Uvicorn
+**Resume Parsing:** pdfplumber, python-docx
+**Deployment:** Vercel (frontend), Render (backend)
+**CI/CD:** GitHub Actions (lint + test on every push)
 
-### **Step 6: Scoring Hoti Hai**
-- `scorer.py` dono lists (resume keywords vs JD keywords) ko **compare** karta hai
-- Calculate karta hai:
-  - Kitne % keywords match hue
-  - Konse important keywords **missing** hain resume mein
-  - Formatting issues hain kya (tables, columns — jo ATS parse nahi kar pata) — yeh `formatter_check.py` dekhega
+## ⚙️ How It Works
 
-### **Step 7: Result Backend Se Frontend Ko Jaata Hai**
-- API response mein yeh sab JSON format mein jaata hai:
-```json
-{
-  "match_score": 72,
-  "matched_keywords": ["Python", "SQL", "Docker"],
-  "missing_keywords": ["AWS", "Kubernetes"],
-  "formatting_issues": ["Resume mein tables detected — ATS parse nahi kar sakta"]
-}
+1. User uploads a resume and pastes a job description
+2. Backend extracts raw text from the resume (PDF/DOCX)
+3. Keywords are extracted from both the resume and the job description using a curated skills dictionary
+4. The two keyword sets are compared to calculate a match score
+5. Matched and missing keywords are returned and displayed on the frontend
+
+## 🚀 Running Locally
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-### **Step 8: Frontend Result Dikhata Hai**
-- `ScoreDashboard.jsx` — score ko visually dikhata hai (progress bar/percentage)
-- `SuggestionsPanel.jsx` — missing keywords aur improvement suggestions dikhata hai
+Backend runs at `http://127.0.0.1:8000` (interactive API docs at `/docs`)
 
----
+### Frontend
 
-## Abhi Tak Kaha Pahuche Hai
-
-```
-✅ Step 1-3: Resume upload + parsing (WORKING)
-⬜ Step 4: Keyword extraction (AGLA STEP)
-⬜ Step 5-6: JD processing + Scoring
-⬜ Step 7-8: Frontend connect karna
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-## Simple Analogy Samjhne Ke Liye
+Frontend runs at `http://localhost:5173`
 
-Socho tum ek **teacher** ho jo do cheezein compare kar rahe ho:
-- **Answer key** (Job Description ke required skills)
-- **Student ka paper** (Resume ke skills)
+## 📁 Project Structure
 
-Tum dono ko match karte ho aur batate ho **kitne marks aaye** (score) aur **kya missing tha** (suggestions) — bas yehi ATS checker karta hai, automatically.
+```
+ats-resume-checker/
+├── backend/
+│   ├── app/
+│   │   ├── api/routes/        # API endpoints (resume upload, analyze)
+│   │   ├── services/          # Core logic: parser, keyword extractor, scorer
+│   │   └── main.py            # FastAPI entry point
+│   └── tests/
+├── frontend/
+│   └── src/
+│       ├── components/
+│       ├── services/           # API calls to backend
+│       └── App.jsx
+├── data/
+│   └── keyword_dictionaries/   # Reference skills used for matching
+└── .github/workflows/          # CI/CD pipeline
+```
 
----
+## 🔮 Future Improvements
 
-Ab chalte hain **Step 4 — `keyword_extractor.py`** pe? Yeh agla logical piece hai jo tumhara project ko real ATS checker banayega.
+- Formatting checks (detect tables/columns that break real ATS parsers)
+- Support for more resume sections (certifications, projects)
+- User accounts to save past analyses
+
+## 👤 Author
+**Team :- BlackHat Assassins.**
+**[Shravan lilare]**
+**[Parth masram]**
+**[Sunny paji]**
+GitHub: [@shravanlilare22-arch](https://github.com/shravanlilare22-arch)
