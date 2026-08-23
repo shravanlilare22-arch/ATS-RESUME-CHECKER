@@ -1,0 +1,2 @@
+We are looking for a Software Engineer with strong experience in Python, JavaScript, React, SQL, and Git. 
+Familiarity with Docker and AWS is a plus. Strong communication and teamwork skills required.

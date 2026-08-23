@@ -1,0 +1,73 @@
+{
+  "programming_languages": [
+    "Python", "Java", "JavaScript", "TypeScript", "C", "C++", "C#", "Go", "Rust",
+    "Kotlin", "Swift", "PHP", "Ruby", "R", "MATLAB", "Scala", "Perl", "Dart",
+    "SQL", "Bash", "Shell Scripting", "Objective-C", "VB.NET", "Assembly"
+  ],
+  "frontend": [
+    "React", "React.js", "Angular", "Vue", "Vue.js", "Next.js", "Nuxt.js",
+    "HTML", "HTML5", "CSS", "CSS3", "Sass", "SCSS", "Tailwind CSS", "Bootstrap",
+    "jQuery", "Redux", "Webpack", "Vite", "Material UI", "Chakra UI", "Svelte"
+  ],
+  "backend": [
+    "Node.js", "Express.js", "Django", "Flask", "FastAPI", "Spring Boot",
+    "Spring", "ASP.NET", ".NET Core", "Ruby on Rails", "Laravel", "NestJS",
+    "GraphQL", "REST API", "RESTful API", "gRPC", "Microservices", "WebSockets"
+  ],
+  "databases": [
+    "SQL", "MySQL", "PostgreSQL", "MongoDB", "SQLite", "Oracle", "Redis",
+    "Cassandra", "DynamoDB", "MariaDB", "Firebase", "Firestore", "Elasticsearch",
+    "Neo4j", "Supabase", "CockroachDB", "NoSQL"
+  ],
+  "cloud_devops": [
+    "AWS", "Azure", "Google Cloud", "GCP", "Docker", "Kubernetes", "Terraform",
+    "Jenkins", "CI/CD", "GitHub Actions", "GitLab CI", "Ansible", "Chef",
+    "Puppet", "Nginx", "Apache", "Linux", "Unix", "Cloud Computing",
+    "Serverless", "Lambda", "EC2", "S3", "CloudFormation", "Helm", "Prometheus",
+    "Grafana", "OpenShift"
+  ],
+  "data_science_ml": [
+    "Machine Learning", "Deep Learning", "Artificial Intelligence", "AI",
+    "TensorFlow", "PyTorch", "Keras", "Scikit-learn", "Pandas", "NumPy",
+    "Matplotlib", "Seaborn", "Data Analysis", "Data Visualization",
+    "Natural Language Processing", "NLP", "Computer Vision", "OpenCV",
+    "Data Mining", "Big Data", "Hadoop", "Spark", "Apache Spark", "ETL",
+    "Statistics", "Neural Networks", "Reinforcement Learning", "MLOps",
+    "Power BI", "Tableau", "Excel", "Data Engineering", "Jupyter"
+  ],
+  "mobile": [
+    "Android", "iOS", "React Native", "Flutter", "Swift", "Kotlin",
+    "Xamarin", "Ionic", "Mobile App Development"
+  ],
+  "tools_version_control": [
+    "Git", "GitHub", "GitLab", "Bitbucket", "Jira", "Confluence", "Trello",
+    "Postman", "VS Code", "IntelliJ", "Eclipse", "Figma", "Slack", "Notion",
+    "SVN", "Docker Compose"
+  ],
+  "testing": [
+    "Unit Testing", "Integration Testing", "Selenium", "Jest", "Pytest",
+    "JUnit", "Mocha", "Cypress", "TestNG", "Test Automation", "QA",
+    "Quality Assurance", "Manual Testing", "TDD", "BDD"
+  ],
+  "concepts": [
+    "Object-Oriented Programming", "OOP", "Data Structures", "Algorithms",
+    "System Design", "Design Patterns", "Agile", "Scrum", "Kanban",
+    "Software Development Life Cycle", "SDLC", "API Development",
+    "Version Control", "Debugging", "Problem Solving", "Responsive Web Design",
+    "Cloud Architecture", "Software Engineering", "Distributed Systems",
+    "Multithreading", "Networking", "Cybersecurity", "Blockchain",
+    "DevOps", "Web Development", "Full Stack Development"
+  ],
+  "soft_skills": [
+    "Leadership", "Communication", "Teamwork", "Problem Solving",
+    "Critical Thinking", "Time Management", "Adaptability", "Collaboration",
+    "Creativity", "Analytical Thinking", "Attention to Detail",
+    "Project Management", "Decision Making", "Conflict Resolution",
+    "Presentation Skills", "Mentoring", "Quick Learner", "Multitasking",
+    "Work Ethic", "Interpersonal Skills"
+  ],
+  "certifications": [
+    "AWS Certified", "PMP", "Scrum Master", "CSM", "Google Certified",
+    "Microsoft Certified", "CompTIA", "CCNA", "CISSP", "Azure Certified"
+  ]
+}
