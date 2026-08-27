@@ -162,7 +162,9 @@ button.secondary:hover {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -232,8 +234,13 @@ button.secondary:hover {
   border-radius: 50%;
 }
 
-.dot.success { background: #22c55e; }
-.dot.danger { background: #ef4444; }
+.dot.success {
+  background: #22c55e;
+}
+
+.dot.danger {
+  background: #ef4444;
+}
 
 .keyword-tags {
   display: flex;
@@ -269,4 +276,64 @@ button.secondary:hover {
   color: #475569;
   font-size: 13px;
   margin-top: 24px;
+}
+
+.category-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #334155;
+}
+
+.category-section h3 {
+  color: #e2e8f0;
+  font-size: 15px;
+  margin: 0 0 16px;
+}
+
+.category-row {
+  margin-bottom: 14px;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.category-name {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.category-score {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #334155;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+.fill-high {
+  background: #22c55e;
+}
+
+.fill-mid {
+  background: #f59e0b;
+}
+
+.fill-low {
+  background: #ef4444;
 }

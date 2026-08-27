@@ -121,6 +121,26 @@ function App() {
               </div>
               <p className="score-label">Match score</p>
             </div>
+            {result.category_breakdown && result.category_breakdown.length > 0 && (
+              <div className="category-section">
+                <h3>Score by category</h3>
+                {result.category_breakdown.map((cat) => (
+                  <div key={cat.category} className="category-row">
+                    <div className="category-header">
+                      <span className="category-name">{cat.category}</span>
+                      <span className="category-score">{cat.score}%</span>
+                    </div>
+                    <div className="progress-bar-bg">
+                      <div
+                        className={`progress-bar-fill ${cat.score >= 70 ? "fill-high" : cat.score >= 40 ? "fill-mid" : "fill-low"
+                          }`}
+                        style={{ width: `${cat.score}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="keywords-section">
               <h3><span className="dot success"></span>Matched keywords</h3>
