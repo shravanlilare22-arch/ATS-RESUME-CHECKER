@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import resume, score
+from app.api.routes import score
 
 app = FastAPI()
 
@@ -12,7 +12,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(resume.router)
 app.include_router(score.router)
 
 
