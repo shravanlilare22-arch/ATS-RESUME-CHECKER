@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { analyzeResume } from "../services/api";
 import "../App.css";
 
 function AtsCheckerPage() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
+  const [targetRole, setTargetRole] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
 
   const handleFile = (selectedFile) => {
@@ -15,6 +20,44 @@ function AtsCheckerPage() {
     e.preventDefault();
     setDragActive(false);
     handleFile(e.dataTransfer.files[0]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!file || !targetRole.trim()) {
+      setError("Please upload a resume and enter your target role.");
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+    try {
+      const data = await analyzeResume(file, targetRole);
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setResult(data);
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again in a moment.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setTargetRole("");
+    setResult(null);
+    setError("");
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 70) return "score-high";
+    if (score >= 40) return "score-mid";
+    return "score-low";
   };
 
   return (
@@ -28,7 +71,7 @@ function AtsCheckerPage() {
           </p>
         </header>
 
-        <div className="card">
+        <form onSubmit={handleSubmit} className="card">
           <div className="form-group">
             <label>Resume</label>
             <div
@@ -52,7 +95,79 @@ function AtsCheckerPage() {
               )}
             </div>
           </div>
-        </div>
+
+          <div className="form-group">
+            <label>Target role</label>
+            <input
+              type="text"
+              className="text-input"
+              placeholder="e.g. Frontend Developer, Data Analyst, Backend Engineer"
+              value={targetRole}
+              onChange={(e) => setTargetRole(e.target.value)}
+            />
+          </div>
+
+          <div className="button-row">
+            <button type="submit" disabled={loading}>
+              {loading ? <span className="spinner"></span> : "Analyze my resume"}
+            </button>
+            {(file || targetRole || result) && (
+              <button type="button" className="secondary" onClick={handleReset}>
+                Reset
+              </button>
+            )}
+          </div>
+
+          {error && <p className="error">{error}</p>}
+        </form>
+
+        {result && (
+          <div className="card result">
+            <div className="score-block">
+              <div className={`score-circle ${getScoreColor(result.ats_score)}`}>
+                <span>{result.ats_score}%</span>
+              </div>
+              <p className="score-label">ATS Score for {result.target_role}</p>
+              <p className="verdict">{result.overall_verdict}</p>
+            </div>
+
+            <div className="ai-section">
+              <h3><span className="dot success"></span>Strengths</h3>
+              <ul className="ai-list">
+                {result.strengths?.map((item, i) => (
+                  <li key={i} className="strength-item">{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="ai-section">
+              <h3><span className="dot danger"></span>Weaknesses</h3>
+              <ul className="ai-list">
+                {result.weaknesses?.map((item, i) => (
+                  <li key={i} className="weakness-item">{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="ai-section">
+              <h3>Missing skills</h3>
+              <div className="keyword-tags missing">
+                {result.missing_skills?.map((kw) => (
+                  <span key={kw} className="tag">{kw}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="ai-section">
+              <h3>💡 Suggestions</h3>
+              <ul className="ai-list suggestions">
+                {result.suggestions?.map((item, i) => (
+                  <li key={i} className="suggestion-item">{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
