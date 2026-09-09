@@ -4,3 +4,5 @@ python-multipart
 pdfplumber
 python-docx
 httpx
+google-generativeai
+python-dotenv
