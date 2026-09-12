@@ -131,6 +131,55 @@ function AtsCheckerPage() {
               <p className="verdict">{result.overall_verdict}</p>
             </div>
 
+            {result.category_scores && result.category_scores.length > 0 && (
+              <div className="category-section">
+                <h3>Score by category</h3>
+                {result.category_scores.map((cat) => (
+                  <div key={cat.category} className="category-row">
+                    <div className="category-header">
+                      <span className="category-name">{cat.category}</span>
+                      <span className="category-score">{cat.score}%</span>
+                    </div>
+                    <div className="progress-bar-bg">
+                      <div
+                        className={`progress-bar-fill ${
+                          cat.score >= 70 ? "fill-high" : cat.score >= 40 ? "fill-mid" : "fill-low"
+                        }`}
+                        style={{ width: `${cat.score}%` }}
+                      ></div>
+                    </div>
+                    <p className="category-reason">{cat.reason}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {result.strengths && result.weaknesses && (
+              <div className="balance-section">
+                <h3>Overall Balance</h3>
+                <div className="balance-bar-bg">
+                  <div
+                    className="balance-bar-fill"
+                    style={{
+                      width: `${Math.round(
+                        (result.strengths.length /
+                          (result.strengths.length + result.weaknesses.length)) *
+                          100
+                      )}%`,
+                    }}
+                  ></div>
+                </div>
+                <div className="balance-labels">
+                  <span className="balance-label-strength">
+                    {result.strengths.length} Strengths
+                  </span>
+                  <span className="balance-label-weakness">
+                    {result.weaknesses.length} Weaknesses
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="ai-section">
               <h3><span className="dot success"></span>Strengths</h3>
               <ul className="ai-list">

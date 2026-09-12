@@ -14,7 +14,7 @@ model = genai.GenerativeModel("gemini-3.6-flash")
 def analyze_resume_with_ai(resume_text: str, target_role: str) -> dict:
     """
     Resume text aur target role Gemini ko bhejta hai,
-    aur structured JSON response (score + feedback + suggestions) wapas deta hai
+    aur structured JSON response (score + feedback + suggestions + category scores) wapas deta hai
     """
 
     prompt = f"""
@@ -35,10 +35,16 @@ Analyze this resume specifically for the "{target_role}" role and return a JSON 
   "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
   "weaknesses": ["<weakness 1>", "<weakness 2>", "<weakness 3>"],
   "missing_skills": ["<skill or keyword missing for this role>", "..."],
-  "suggestions": ["<specific actionable suggestion 1>", "<specific actionable suggestion 2>", "<specific actionable suggestion 3>"]
+  "suggestions": ["<specific actionable suggestion 1>", "<specific actionable suggestion 2>", "<specific actionable suggestion 3>"],
+  "category_scores": [
+    {{"category": "Technical Skills", "score": <0-100>, "reason": "<one short sentence>"}},
+    {{"category": "Experience Relevance", "score": <0-100>, "reason": "<one short sentence>"}},
+    {{"category": "Formatting & ATS Compatibility", "score": <0-100>, "reason": "<one short sentence>"}},
+    {{"category": "Communication & Soft Skills", "score": <0-100>, "reason": "<one short sentence>"}}
+  ]
 }}
 
-Be honest and specific to the "{target_role}" role. Base the score on real ATS parsing factors (keyword relevance, structure, clarity) and how well this resume fits that specific role.
+Be honest and specific to the "{target_role}" role. Base the score on real ATS parsing factors (keyword relevance, structure, clarity) and how well this resume fits that specific role. Score each category independently based on what's actually visible in the resume.
 
 IMPORTANT: Respond ENTIRELY in clear, professional English. Do not use any other language or mixed language in your response.
 """
