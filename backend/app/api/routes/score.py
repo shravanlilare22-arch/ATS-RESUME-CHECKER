@@ -29,5 +29,6 @@ async def analyze_resume(
     return {
         "filename": file.filename,
         "target_role": target_role,
+        "resume_text": resume_text,
         **result
     }

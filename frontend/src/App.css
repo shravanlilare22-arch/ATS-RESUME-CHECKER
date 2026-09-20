@@ -502,14 +502,15 @@ button.secondary:hover {
   font-size: 12px;
   font-weight: 600;
 }
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .landing {
   min-height: 100vh;
-  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59,130,246,0.15), transparent),
-              #0a0f1e;
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59, 130, 246, 0.15), transparent),
+    #0a0f1e;
   color: #e2e8f0;
   overflow-x: hidden;
 }
@@ -601,7 +602,7 @@ body {
 }
 
 .feature-card {
-  background: linear-gradient(180deg, rgba(30,41,59,0.6), rgba(30,41,59,0.3));
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.6), rgba(30, 41, 59, 0.3));
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 16px;
   padding: 32px 24px;
@@ -638,14 +639,119 @@ body {
   .features {
     grid-template-columns: 1fr;
   }
+
   .hero h1 {
     font-size: 30px;
   }
 }
+
 .card {
   transition: box-shadow 0.3s ease;
 }
 
 .card:hover {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.chat-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #334155;
+}
+
+.chat-box {
+  background: #0f172a;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  min-height: 60px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.chat-placeholder {
+  color: #64748b;
+  font-size: 13px;
+  margin: 0;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chat-user {
+  align-self: flex-end;
+  background: #3b82f6;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-ai {
+  align-self: flex-start;
+  background: #1e293b;
+  color: #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-typing {
+  display: flex;
+  gap: 4px;
+  padding: 14px;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #64748b;
+  animation: typingBounce 1.2s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-row .text-input {
+  flex: 1;
+}
+
+.chat-input-row button {
+  flex: 0 0 auto;
+  padding: 12px 20px;
 }

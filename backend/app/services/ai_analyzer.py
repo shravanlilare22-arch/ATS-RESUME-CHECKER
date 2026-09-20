@@ -68,3 +68,44 @@ IMPORTANT: Respond ENTIRELY in clear, professional English. Do not use any other
         return {
             "error": f"AI analysis failed: {str(e)}"
         }
+
+
+def chat_about_resume(resume_text: str, target_role: str, chat_history: list, new_message: str) -> dict:
+    """
+    User ke resume ke context mein follow-up sawaal ka jawab deta hai.
+    chat_history ek list hai [{"role": "user"/"ai", "content": "..."}] format mein,
+    taaki AI ko poori conversation yaad rahe.
+    """
+
+    history_text = ""
+    for msg in chat_history:
+        speaker = "Candidate" if msg["role"] == "user" else "You (AI Assistant)"
+        history_text += f"{speaker}: {msg['content']}\n"
+
+    prompt = f"""
+You are a helpful, expert resume and career advisor AI assistant. You have already analyzed a candidate's resume for the role: "{target_role}".
+
+Here is the candidate's resume text for your reference:
+---
+{resume_text}
+---
+
+Here is the conversation so far between you and the candidate:
+---
+{history_text if history_text else "(This is the first message in the conversation.)"}
+---
+
+The candidate just asked: "{new_message}"
+
+Respond helpfully and specifically, using the resume content and the target role as context. Keep your answer concise (2-5 sentences unless the question needs more detail), practical, and actionable. Respond in plain text only (no JSON, no markdown formatting, no code blocks) — just a natural, conversational answer.
+
+IMPORTANT: Respond ENTIRELY in clear, professional English.
+"""
+
+    try:
+        response = model.generate_content(prompt)
+        answer = response.text.strip()
+        return {"reply": answer}
+
+    except Exception as e:
+        return {"error": f"Chat failed: {str(e)}"}

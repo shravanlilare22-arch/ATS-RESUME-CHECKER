@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { analyzeResume } from "../services/api";
+import { analyzeResume, chatAboutResume } from "../services/api";
 import "../App.css";
 
 function AnimatedScore({ value, colorClass }) {
@@ -43,6 +43,11 @@ function AtsCheckerPage() {
   const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
 
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef(null);
+
   const handleFile = (selectedFile) => {
     if (selectedFile) setFile(selectedFile);
   };
@@ -64,6 +69,7 @@ function AtsCheckerPage() {
 
     setLoading(true);
     setResult(null);
+    setChatMessages([]);
     try {
       const data = await analyzeResume(file, targetRole);
       if (data.error) {
@@ -83,7 +89,42 @@ function AtsCheckerPage() {
     setTargetRole("");
     setResult(null);
     setError("");
+    setChatMessages([]);
+    setChatInput("");
   };
+
+  const handleChatSend = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || chatLoading) return;
+
+    const userMessage = chatInput.trim();
+    const updatedHistory = [...chatMessages, { role: "user", content: userMessage }];
+    setChatMessages(updatedHistory);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const data = await chatAboutResume(
+        result.resume_text,
+        result.target_role,
+        chatMessages,
+        userMessage
+      );
+      if (data.reply) {
+        setChatMessages([...updatedHistory, { role: "ai", content: data.reply }]);
+      } else {
+        setChatMessages([...updatedHistory, { role: "ai", content: "Sorry, I couldn't process that. Please try again." }]);
+      }
+    } catch (err) {
+      setChatMessages([...updatedHistory, { role: "ai", content: "Something went wrong. Please try again." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, chatLoading]);
 
   const getScoreColor = (score) => {
     if (score >= 70) return "score-high";
@@ -357,6 +398,65 @@ function AtsCheckerPage() {
                     <li key={i} className="suggestion-item">{item}</li>
                   ))}
                 </ul>
+              </motion.div>
+
+              <motion.div
+                className="ai-section chat-section"
+                initial="hidden"
+                animate="visible"
+                custom={7}
+                variants={fadeUp}
+              >
+                <h3>💬 Ask AI about your resume</h3>
+                <div className="chat-box">
+                  {chatMessages.length === 0 && (
+                    <p className="chat-placeholder">
+                      Ask a follow-up question — e.g. "How do I fix the formatting issue?" or "What project should I add?"
+                    </p>
+                  )}
+                  <div className="chat-messages">
+                    {chatMessages.map((msg, i) => (
+                      <motion.div
+                        key={i}
+                        className={`chat-bubble ${msg.role === "user" ? "chat-user" : "chat-ai"}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {msg.content}
+                      </motion.div>
+                    ))}
+                    {chatLoading && (
+                      <motion.div
+                        className="chat-bubble chat-ai chat-typing"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
+                      </motion.div>
+                    )}
+                    <div ref={chatEndRef}></div>
+                  </div>
+                </div>
+                <form className="chat-input-row" onSubmit={handleChatSend}>
+                  <input
+                    type="text"
+                    className="text-input"
+                    placeholder="Type your question..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                  />
+                  <motion.button
+                    type="submit"
+                    disabled={chatLoading || !chatInput.trim()}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    Send
+                  </motion.button>
+                </form>
               </motion.div>
             </motion.div>
           )}

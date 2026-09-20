@@ -15,3 +15,13 @@ export const analyzeResume = async (file, targetRole) => {
 
   return response.data;
 };
+export const chatAboutResume = async (resumeText, targetRole, chatHistory, newMessage) => {
+  const response = await axios.post(`${API_BASE_URL}/chat`, {
+    resume_text: resumeText,
+    target_role: targetRole,
+    chat_history: chatHistory,
+    new_message: newMessage,
+  });
+
+  return response.data;
+};
