@@ -3,6 +3,60 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { analyzeResume, chatAboutResume } from "../services/api";
 import "../App.css";
+function GaugeScore({ value }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const duration = 1200;
+    const stepTime = 16;
+    const steps = duration / stepTime;
+    const increment = value / steps;
+
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= value) {
+        setDisplay(value);
+        clearInterval(timer);
+      } else {
+        setDisplay(Math.round(start));
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  const angle = (display / 100) * 180;
+  const needleAngle = angle - 90;
+
+  return (
+    <div className="gauge-wrapper">
+      <svg viewBox="0 0 200 110" className="gauge-svg">
+        <path d="M 10 100 A 90 90 0 0 1 55 20" stroke="#ef4444" strokeWidth="14" fill="none" strokeLinecap="round" />
+        <path d="M 55 20 A 90 90 0 0 1 100 10" stroke="#f59e0b" strokeWidth="14" fill="none" strokeLinecap="round" />
+        <path d="M 100 10 A 90 90 0 0 1 145 20" stroke="#eab308" strokeWidth="14" fill="none" strokeLinecap="round" />
+        <path d="M 145 20 A 90 90 0 0 1 190 100" stroke="#22c55e" strokeWidth="14" fill="none" strokeLinecap="round" />
+        <motion.line
+          x1="100"
+          y1="100"
+          x2="100"
+          y2="30"
+          stroke="#f1f0fb"
+          strokeWidth="3"
+          strokeLinecap="round"
+          style={{ transformOrigin: "100px 100px" }}
+          animate={{ rotate: needleAngle }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        />
+        <circle cx="100" cy="100" r="6" fill="#f1f0fb" />
+      </svg>
+      <div className="gauge-value">
+        <span className="gauge-number">{display}</span>
+        <span className="gauge-outof">/100</span>
+      </div>
+    </div>
+  );
+}
 
 function AnimatedScore({ value, colorClass }) {
   const [display, setDisplay] = useState(0);
@@ -43,6 +97,8 @@ function AtsCheckerPage() {
   const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
 
+  const [chatOpen, setChatOpen] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -70,6 +126,7 @@ function AtsCheckerPage() {
     setLoading(true);
     setResult(null);
     setChatMessages([]);
+    setChatOpen(false);
     try {
       const data = await analyzeResume(file, targetRole);
       if (data.error) {
@@ -91,6 +148,7 @@ function AtsCheckerPage() {
     setError("");
     setChatMessages([]);
     setChatInput("");
+    setChatOpen(false);
   };
 
   const handleChatSend = async (e) => {
@@ -270,105 +328,119 @@ function AtsCheckerPage() {
                 custom={0}
                 variants={fadeUp}
               >
-                <AnimatedScore value={result.ats_score} colorClass={getScoreColor(result.ats_score)} />
+                <GaugeScore value={result.ats_score} />
                 <p className="score-label">ATS Score for {result.target_role}</p>
                 <p className="verdict">{result.overall_verdict}</p>
               </motion.div>
 
-              {result.category_scores && result.category_scores.length > 0 && (
-                <motion.div
-                  className="category-section"
-                  initial="hidden"
-                  animate="visible"
-                  custom={1}
-                  variants={fadeUp}
-                >
-                  <h3>Score by category</h3>
-                  {result.category_scores.map((cat, i) => (
-                    <div key={cat.category} className="category-row">
-                      <div className="category-header">
-                        <span className="category-name">{cat.category}</span>
-                        <span className="category-score">{cat.score}%</span>
+              <div className="result-grid">
+                {result.category_scores && result.category_scores.length > 0 && (
+                  <motion.div
+                    className="grid-box category-section"
+                    initial="hidden"
+                    animate="visible"
+                    custom={1}
+                    variants={fadeUp}
+                  >
+                    <h3>Score by category</h3>
+                    {result.category_scores.map((cat, i) => (
+                      <div key={cat.category} className="accordion-item">
+                        <div
+                          className="accordion-header"
+                          onClick={() => setExpandedCategory(expandedCategory === i ? null : i)}
+                        >
+                          <span className="category-name">{cat.category}</span>
+                          <div className="accordion-right">
+                            <span className={`mini-score ${cat.score >= 70 ? "fill-high" : cat.score >= 40 ? "fill-mid" : "fill-low"}`}>
+                              {cat.score}%
+                            </span>
+                            <span className={`accordion-arrow ${expandedCategory === i ? "open" : ""}`}>▾</span>
+                          </div>
+                        </div>
+                        <AnimatePresence>
+                          {expandedCategory === i && (
+                            <motion.div
+                              className="accordion-body"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25 }}
+                            >
+                              <p>{cat.reason}</p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                      <div className="progress-bar-bg">
-                        <motion.div
-                          className={`progress-bar-fill ${
-                            cat.score >= 70 ? "fill-high" : cat.score >= 40 ? "fill-mid" : "fill-low"
-                          }`}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${cat.score}%` }}
-                          transition={{ duration: 0.8, delay: 0.3 + i * 0.1, ease: "easeOut" }}
-                        ></motion.div>
-                      </div>
-                      <p className="category-reason">{cat.reason}</p>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
+                    ))}
+                  </motion.div>
+                )}
 
-              {result.strengths && result.weaknesses && (
-                <motion.div
-                  className="balance-section"
-                  initial="hidden"
-                  animate="visible"
-                  custom={2}
-                  variants={fadeUp}
-                >
-                  <h3>Overall Balance</h3>
-                  <div className="balance-bar-bg">
-                    <motion.div
-                      className="balance-bar-fill"
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${Math.round(
-                          (result.strengths.length /
-                            (result.strengths.length + result.weaknesses.length)) *
+                {result.strengths && result.weaknesses && (
+                  <motion.div
+                    className="grid-box balance-section"
+                    initial="hidden"
+                    animate="visible"
+                    custom={2}
+                    variants={fadeUp}
+                  >
+                    <h3>Overall Balance</h3>
+                    <div className="balance-bar-bg">
+                      <motion.div
+                        className="balance-bar-fill"
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${Math.round(
+                            (result.strengths.length /
+                              (result.strengths.length + result.weaknesses.length)) *
                             100
-                        )}%`,
-                      }}
-                      transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-                    ></motion.div>
-                  </div>
-                  <div className="balance-labels">
-                    <span className="balance-label-strength">
-                      {result.strengths.length} Strengths
-                    </span>
-                    <span className="balance-label-weakness">
-                      {result.weaknesses.length} Weaknesses
-                    </span>
-                  </div>
+                          )}%`,
+                        }}
+                        transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+                      ></motion.div>
+                    </div>
+                    <div className="balance-labels">
+                      <span className="balance-label-strength">
+                        {result.strengths.length} Strengths
+                      </span>
+                      <span className="balance-label-weakness">
+                        {result.weaknesses.length} Weaknesses
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              <div className="result-grid">
+                <motion.div
+                  className="grid-box ai-section"
+                  initial="hidden"
+                  animate="visible"
+                  custom={3}
+                  variants={fadeUp}
+                >
+                  <h3><span className="dot success"></span>Strengths</h3>
+                  <ul className="ai-list">
+                    {result.strengths?.map((item, i) => (
+                      <li key={i} className="strength-item">{item}</li>
+                    ))}
+                  </ul>
                 </motion.div>
-              )}
 
-              <motion.div
-                className="ai-section"
-                initial="hidden"
-                animate="visible"
-                custom={3}
-                variants={fadeUp}
-              >
-                <h3><span className="dot success"></span>Strengths</h3>
-                <ul className="ai-list">
-                  {result.strengths?.map((item, i) => (
-                    <li key={i} className="strength-item">{item}</li>
-                  ))}
-                </ul>
-              </motion.div>
-
-              <motion.div
-                className="ai-section"
-                initial="hidden"
-                animate="visible"
-                custom={4}
-                variants={fadeUp}
-              >
-                <h3><span className="dot danger"></span>Weaknesses</h3>
-                <ul className="ai-list">
-                  {result.weaknesses?.map((item, i) => (
-                    <li key={i} className="weakness-item">{item}</li>
-                  ))}
-                </ul>
-              </motion.div>
+                <motion.div
+                  className="grid-box ai-section"
+                  initial="hidden"
+                  animate="visible"
+                  custom={4}
+                  variants={fadeUp}
+                >
+                  <h3><span className="dot danger"></span>Weaknesses</h3>
+                  <ul className="ai-list">
+                    {result.weaknesses?.map((item, i) => (
+                      <li key={i} className="weakness-item">{item}</li>
+                    ))}
+                  </ul>
+                </motion.div>
+              </div>
 
               <motion.div
                 className="ai-section"
@@ -399,15 +471,39 @@ function AtsCheckerPage() {
                   ))}
                 </ul>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
+      {result && (
+        <>
+          <motion.button
+            className="chat-fab"
+            onClick={() => setChatOpen(!chatOpen)}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+          >
+            {chatOpen ? "✕" : "💬"}
+          </motion.button>
+
+          <AnimatePresence>
+            {chatOpen && (
               <motion.div
-                className="ai-section chat-section"
-                initial="hidden"
-                animate="visible"
-                custom={7}
-                variants={fadeUp}
+                className="chat-panel"
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                transition={{ duration: 0.25 }}
               >
-                <h3>💬 Ask AI about your resume</h3>
+                <div className="chat-panel-header">
+                  <span>💬 Ask AI about your resume</span>
+                  <button className="chat-close" onClick={() => setChatOpen(false)}>✕</button>
+                </div>
+
                 <div className="chat-box">
                   {chatMessages.length === 0 && (
                     <p className="chat-placeholder">
@@ -440,6 +536,7 @@ function AtsCheckerPage() {
                     <div ref={chatEndRef}></div>
                   </div>
                 </div>
+
                 <form className="chat-input-row" onSubmit={handleChatSend}>
                   <input
                     type="text"
@@ -458,10 +555,10 @@ function AtsCheckerPage() {
                   </motion.button>
                 </form>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
     </div>
   );
 }

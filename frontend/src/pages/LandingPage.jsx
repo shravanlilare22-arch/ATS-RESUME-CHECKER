@@ -35,7 +35,7 @@ function LandingPage() {
           custom={0}
           variants={fadeUp}
         >
-          ✨ Powered by AI
+          ✨ Smarter Resume Insights
         </motion.div>
 
         <motion.h1
