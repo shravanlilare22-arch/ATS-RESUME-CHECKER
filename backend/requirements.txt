@@ -6,3 +6,6 @@ python-docx
 httpx
 google-generativeai
 python-dotenv
+sqlalchemy
+passlib[bcrypt]
+python-jose[cryptography]

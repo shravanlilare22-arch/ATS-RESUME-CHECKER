@@ -926,3 +926,96 @@ button.secondary:hover {
   line-height: 1.5;
   margin: 0;
 }
+.navbar {
+  padding: 24px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 25px;
+  object-fit: cover;
+}
+
+.nav-links {
+  display: flex;
+  gap: 28px;
+}
+
+.nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-links a:hover {
+  color: var(--text-primary);
+}
+
+.how-it-works {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 90px;
+  text-align: center;
+}
+
+.how-it-works h2 {
+  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.step-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 30px 22px;
+  backdrop-filter: blur(16px);
+}
+
+.step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  color: white;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+
+.step-card h3 {
+  color: var(--text-primary);
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.step-card p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    display: none;
+  }
+  .steps-row {
+    grid-template-columns: 1fr;
+  }
+}

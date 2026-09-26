@@ -1,3 +1,4 @@
+import logo from "../assets/logo.png";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -22,9 +23,27 @@ function LandingPage() {
         transition={{ duration: 0.5 }}
       >
         <span className="logo">
-          <span className="logo-dot"></span>
+          <img src={logo} alt="ATS Resume Checker" className="logo-img" />
           ATS Resume Checker
         </span>
+
+        <div className="nav-links">
+          <a href="#home" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+            Home
+          </a>
+          <a href="#features" onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
+          }}>
+            Features
+          </a>
+          <a href="#how-it-works" onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+          }}>
+            How It Works
+          </a>
+        </div>
       </motion.nav>
 
       <section className="hero">
@@ -74,7 +93,7 @@ function LandingPage() {
         </motion.button>
       </section>
 
-      <section className="features">
+      <section className="features" id="features">
         {[
           {
             icon: "🎯",
@@ -106,6 +125,30 @@ function LandingPage() {
             <p>{f.desc}</p>
           </motion.div>
         ))}
+      </section>
+
+      <section className="how-it-works" id="how-it-works">
+        <h2>How It Works</h2>
+        <div className="steps-row">
+          {[
+            { num: "1", title: "Upload Resume", desc: "Upload your resume in PDF or DOCX format." },
+            { num: "2", title: "Enter Target Role", desc: "Tell us the job role you're applying for." },
+            { num: "3", title: "Get AI Analysis", desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly." },
+          ].map((step, i) => (
+            <motion.div
+              key={step.num}
+              className="step-card"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: i * 0.15, duration: 0.5 }}
+            >
+              <div className="step-num">{step.num}</div>
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
+            </motion.div>
+          ))}
+        </div>
       </section>
 
       <motion.footer
