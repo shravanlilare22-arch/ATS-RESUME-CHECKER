@@ -1019,3 +1019,45 @@ button.secondary:hover {
     grid-template-columns: 1fr;
   }
 }
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.mobile-menu a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 16px 40px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.mobile-menu a:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    display: none;
+  }
+  .hamburger {
+    display: block;
+  }
+  .mobile-menu {
+    display: flex;
+  }
+}

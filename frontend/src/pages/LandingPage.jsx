@@ -1,5 +1,6 @@
+import { useState } from "react";
 import logo from "../assets/logo.png";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 const fadeUp = {
@@ -7,15 +8,21 @@ const fadeUp = {
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.15, duration: 0.6, ease: "easeOut" },
+    transition: {
+      delay: i * 0.15,
+      duration: 0.6,
+      ease: "easeOut",
+    },
   }),
 };
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="landing">
+    <>
+      {/* ================= NAVBAR ================= */}
       <motion.nav
         className="navbar"
         initial={{ opacity: 0, y: -20 }}
@@ -23,30 +30,143 @@ function LandingPage() {
         transition={{ duration: 0.5 }}
       >
         <span className="logo">
-          <img src={logo} alt="ATS Resume Checker" className="logo-img" />
+          <img
+            src={logo}
+            alt="ATS Resume Checker"
+            className="logo-img"
+          />
           ATS Resume Checker
         </span>
 
+        {/* Desktop Navigation */}
         <div className="nav-links">
-          <a href="#home" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+          <a
+            href="#home"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+            }}
+          >
             Home
           </a>
-          <a href="#features" onClick={(e) => {
-            e.preventDefault();
-            document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
-          }}>
+
+          <a
+            href="#features"
+            onClick={(e) => {
+              e.preventDefault();
+              document
+                .getElementById("features")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                });
+            }}
+          >
             Features
           </a>
-          <a href="#how-it-works" onClick={(e) => {
-            e.preventDefault();
-            document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
-          }}>
+
+          <a
+            href="#how-it-works"
+            onClick={(e) => {
+              e.preventDefault();
+              document
+                .getElementById("how-it-works")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                });
+            }}
+          >
             How It Works
           </a>
         </div>
+
+        {/* Mobile Hamburger */}
+        <button
+          className="hamburger"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? "✕" : "☰"}
+        </button>
       </motion.nav>
 
-      <section className="hero">
+      {/* ================= MOBILE MENU ================= */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            className="mobile-menu"
+            initial={{
+              opacity: 0,
+              height: 0,
+            }}
+            animate={{
+              opacity: 1,
+              height: "auto",
+            }}
+            exit={{
+              opacity: 0,
+              height: 0,
+            }}
+            transition={{
+              duration: 0.25,
+            }}
+          >
+            <a
+              href="#home"
+              onClick={(e) => {
+                e.preventDefault();
+
+                window.scrollTo({
+                  top: 0,
+                  behavior: "smooth",
+                });
+
+                setMenuOpen(false);
+              }}
+            >
+              Home
+            </a>
+
+            <a
+              href="#features"
+              onClick={(e) => {
+                e.preventDefault();
+
+                document
+                  .getElementById("features")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+
+                setMenuOpen(false);
+              }}
+            >
+              Features
+            </a>
+
+            <a
+              href="#how-it-works"
+              onClick={(e) => {
+                e.preventDefault();
+
+                document
+                  .getElementById("how-it-works")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+
+                setMenuOpen(false);
+              }}
+            >
+              How It Works
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= HERO SECTION ================= */}
+      <section className="hero" id="home">
         <motion.div
           className="hero-badge"
           initial="hidden"
@@ -65,7 +185,9 @@ function LandingPage() {
         >
           Know if your resume passes the ATS
           <br />
-          <span className="gradient-text">before you hit apply.</span>
+          <span className="gradient-text">
+            before you hit apply.
+          </span>
         </motion.h1>
 
         <motion.p
@@ -74,9 +196,10 @@ function LandingPage() {
           custom={2}
           variants={fadeUp}
         >
-          Upload your resume, tell us the role you're targeting, and get an
-          AI-powered analysis with a real ATS-style score, honest feedback,
-          and concrete suggestions to improve.
+          Upload your resume, tell us the role you're targeting,
+          and get an AI-powered analysis with a real ATS-style
+          score, honest feedback, and concrete suggestions to
+          improve.
         </motion.p>
 
         <motion.button
@@ -85,7 +208,11 @@ function LandingPage() {
           animate="visible"
           custom={3}
           variants={fadeUp}
-          whileHover={{ scale: 1.04, boxShadow: "0 8px 30px rgba(59,130,246,0.4)" }}
+          whileHover={{
+            scale: 1.04,
+            boxShadow:
+              "0 8px 30px rgba(59,130,246,0.4)",
+          }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate("/ats-score")}
         >
@@ -93,6 +220,7 @@ function LandingPage() {
         </motion.button>
       </section>
 
+      {/* ================= FEATURES ================= */}
       <section className="features" id="features">
         {[
           {
@@ -114,43 +242,95 @@ function LandingPage() {
           <motion.div
             key={f.title}
             className="feature-card"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ delay: i * 0.15, duration: 0.5 }}
-            whileHover={{ y: -6 }}
+            initial={{
+              opacity: 0,
+              y: 40,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+              amount: 0.3,
+            }}
+            transition={{
+              delay: i * 0.15,
+              duration: 0.5,
+            }}
+            whileHover={{
+              y: -6,
+            }}
           >
-            <div className="feature-icon">{f.icon}</div>
+            <div className="feature-icon">
+              {f.icon}
+            </div>
+
             <h3>{f.title}</h3>
+
             <p>{f.desc}</p>
           </motion.div>
         ))}
       </section>
 
-      <section className="how-it-works" id="how-it-works">
+      {/* ================= HOW IT WORKS ================= */}
+      <section
+        className="how-it-works"
+        id="how-it-works"
+      >
         <h2>How It Works</h2>
+
         <div className="steps-row">
           {[
-            { num: "1", title: "Upload Resume", desc: "Upload your resume in PDF or DOCX format." },
-            { num: "2", title: "Enter Target Role", desc: "Tell us the job role you're applying for." },
-            { num: "3", title: "Get AI Analysis", desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly." },
+            {
+              num: "1",
+              title: "Upload Resume",
+              desc: "Upload your resume in PDF or DOCX format.",
+            },
+            {
+              num: "2",
+              title: "Enter Target Role",
+              desc: "Tell us the job role you're applying for.",
+            },
+            {
+              num: "3",
+              title: "Get AI Analysis",
+              desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly.",
+            },
           ].map((step, i) => (
             <motion.div
               key={step.num}
               className="step-card"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ delay: i * 0.15, duration: 0.5 }}
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.3,
+              }}
+              transition={{
+                delay: i * 0.15,
+                duration: 0.5,
+              }}
             >
-              <div className="step-num">{step.num}</div>
+              <div className="step-num">
+                {step.num}
+              </div>
+
               <h3>{step.title}</h3>
+
               <p>{step.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
+      {/* ================= FOOTER ================= */}
       <motion.footer
         className="landing-footer"
         initial={{ opacity: 0 }}
@@ -160,7 +340,7 @@ function LandingPage() {
       >
         Built with FastAPI, React, and Google Gemini
       </motion.footer>
-    </div>
+    </>
   );
 }
 
