@@ -44,6 +44,7 @@ function LandingPage() {
             href="#home"
             onClick={(e) => {
               e.preventDefault();
+
               window.scrollTo({
                 top: 0,
                 behavior: "smooth",
@@ -57,10 +58,12 @@ function LandingPage() {
             href="#features"
             onClick={(e) => {
               e.preventDefault();
+
               document
                 .getElementById("features")
                 ?.scrollIntoView({
                   behavior: "smooth",
+                  block: "start",
                 });
             }}
           >
@@ -71,10 +74,12 @@ function LandingPage() {
             href="#how-it-works"
             onClick={(e) => {
               e.preventDefault();
+
               document
                 .getElementById("how-it-works")
                 ?.scrollIntoView({
                   behavior: "smooth",
+                  block: "start",
                 });
             }}
           >
@@ -137,6 +142,7 @@ function LandingPage() {
                   .getElementById("features")
                   ?.scrollIntoView({
                     behavior: "smooth",
+                    block: "start",
                   });
 
                 setMenuOpen(false);
@@ -154,6 +160,7 @@ function LandingPage() {
                   .getElementById("how-it-works")
                   ?.scrollIntoView({
                     behavior: "smooth",
+                    block: "start",
                   });
 
                 setMenuOpen(false);
@@ -238,28 +245,23 @@ function LandingPage() {
             title: "Actionable Suggestions",
             desc: "Not just a score — clear, specific suggestions on what to fix and improve.",
           },
-        ].map((f, i) => (
+        ].map((f) => (
           <motion.div
             key={f.title}
             className="feature-card"
             initial={{
-              opacity: 0,
-              y: 40,
-            }}
-            whileInView={{
               opacity: 1,
               y: 0,
             }}
-            viewport={{
-              once: true,
-              amount: 0.3,
-            }}
-            transition={{
-              delay: i * 0.15,
-              duration: 0.5,
+            animate={{
+              opacity: 1,
+              y: 0,
             }}
             whileHover={{
               y: -6,
+            }}
+            transition={{
+              duration: 0.3,
             }}
           >
             <div className="feature-icon">

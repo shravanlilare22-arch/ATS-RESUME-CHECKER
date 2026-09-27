@@ -926,11 +926,24 @@ button.secondary:hover {
   line-height: 1.5;
   margin: 0;
 }
+/* ================= NAVBAR ================= */
+
 .navbar {
   padding: 24px 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  z-index: 1000;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .logo-img {
@@ -956,6 +969,9 @@ button.secondary:hover {
 .nav-links a:hover {
   color: var(--text-primary);
 }
+
+
+/* ================= HOW IT WORKS ================= */
 
 .how-it-works {
   max-width: 900px;
@@ -989,7 +1005,11 @@ button.secondary:hover {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  background: linear-gradient(
+    135deg,
+    var(--accent-purple),
+    var(--accent-blue)
+  );
   color: white;
   font-weight: 700;
   display: flex;
@@ -1011,14 +1031,9 @@ button.secondary:hover {
   margin: 0;
 }
 
-@media (max-width: 700px) {
-  .nav-links {
-    display: none;
-  }
-  .steps-row {
-    grid-template-columns: 1fr;
-  }
-}
+
+/* ================= HAMBURGER ================= */
+
 .hamburger {
   display: none;
   background: none;
@@ -1026,8 +1041,11 @@ button.secondary:hover {
   color: var(--text-primary);
   font-size: 24px;
   cursor: pointer;
-  padding: 0;
+  padding: 5px;
 }
+
+
+/* ================= MOBILE MENU ================= */
 
 .mobile-menu {
   display: none;
@@ -1035,6 +1053,8 @@ button.secondary:hover {
   overflow: hidden;
   background: var(--card-bg);
   border-bottom: 1px solid var(--card-border);
+  position: relative;
+  z-index: 999;
 }
 
 .mobile-menu a {
@@ -1050,14 +1070,61 @@ button.secondary:hover {
   border-bottom: none;
 }
 
+
+/* ================= MOBILE ================= */
+
 @media (max-width: 700px) {
+
+  .navbar {
+    padding: 18px 20px;
+  }
+
+  .logo {
+    font-size: 15px;
+  }
+
+  .logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+  }
+
   .nav-links {
     display: none;
   }
+
   .hamburger {
     display: block;
+    flex: 0 0 auto;
   }
+
   .mobile-menu {
     display: flex;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    padding: 0 20px 70px;
+  }
+
+  .feature-card {
+    width: 100%;
+    padding: 28px 22px;
+  }
+
+  .steps-row {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: 60px 20px 60px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+  }
+
+  .hero p {
+    font-size: 15px;
   }
 }
