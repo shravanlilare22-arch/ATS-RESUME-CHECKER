@@ -26,13 +26,13 @@ jobs:
           pip install -r requirements.txt
           pip install pytest flake8
 
-      - name: Create .env for tests
+      - name: Create test environment
         working-directory: backend
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
           if [ -z "$MONGO_URI" ]; then
-            echo "MONGO_URI GitHub Secret is missing."
+            echo "ERROR: MONGO_URI GitHub Secret is missing."
             exit 1
           fi
 
@@ -41,7 +41,9 @@ jobs:
       - name: Lint with flake8
         working-directory: backend
         run: |
-          flake8 . --max-line-length=100 --exclude=venv,__pycache__
+          flake8 . \
+            --max-line-length=100 \
+            --exclude=venv,__pycache__
 
       - name: Run tests
         working-directory: backend
