@@ -3,6 +3,7 @@ import shutil
 import os
 from app.services.parser import extract_resume_text
 from app.services.ai_analyzer import analyze_resume_with_ai
+from app.db.crud import save_analysis
 
 router = APIRouter()
 
@@ -26,9 +27,17 @@ async def analyze_resume(
 
     result = analyze_resume_with_ai(resume_text, target_role)
 
-    return {
+    response = {
         "filename": file.filename,
         "target_role": target_role,
         "resume_text": resume_text,
         **result
     }
+
+    # MongoDB me save karo
+    try:
+        response["analysis_id"] = save_analysis(file.filename, response)
+    except Exception as e:
+        print("MongoDB save error:", e)
+
+    return response

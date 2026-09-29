@@ -9,3 +9,7 @@ python-dotenv
 sqlalchemy
 passlib[bcrypt]
 python-jose[cryptography]
+pymongo
+python-dotenv
+dnspython
+uvicorn
