@@ -1,9 +1,10 @@
 name: CI
+
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -25,6 +26,18 @@ jobs:
           pip install -r requirements.txt
           pip install pytest flake8
 
+      - name: Create .env for tests
+        working-directory: backend
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: |
+          if [ -z "$MONGO_URI" ]; then
+            echo "MONGO_URI GitHub Secret is missing."
+            exit 1
+          fi
+
+          printf 'MONGO_URI=%s\n' "$MONGO_URI" > .env
+
       - name: Lint with flake8
         working-directory: backend
         run: |
@@ -32,6 +45,8 @@ jobs:
 
       - name: Run tests
         working-directory: backend
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
           pytest -v
 
