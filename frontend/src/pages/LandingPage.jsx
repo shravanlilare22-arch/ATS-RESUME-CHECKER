@@ -30,68 +30,47 @@ function LandingPage() {
         transition={{ duration: 0.5 }}
       >
         <span className="logo">
-          <img
-            src={logo}
-            alt="ATS Resume Checker"
-            className="logo-img"
-          />
+          <img src={logo} alt="ATS Resume Checker" className="logo-img" />
           ATS Resume Checker
         </span>
 
-        {/* Desktop Navigation */}
         <div className="nav-links">
           <a
             href="#home"
             onClick={(e) => {
               e.preventDefault();
-
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           >
             Home
           </a>
-
           <a
             href="#features"
             onClick={(e) => {
               e.preventDefault();
-
-              document
-                .getElementById("features")
-                ?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+              document.getElementById("features")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
             }}
           >
             Features
           </a>
-
           <a
             href="#how-it-works"
             onClick={(e) => {
               e.preventDefault();
-
-              document
-                .getElementById("how-it-works")
-                ?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+              document.getElementById("how-it-works")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
             }}
           >
             How It Works
           </a>
         </div>
 
-        {/* Mobile Hamburger */}
-        <button
-          className="hamburger"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
+        <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? "✕" : "☰"}
         </button>
       </motion.nav>
@@ -101,68 +80,42 @@ function LandingPage() {
         {menuOpen && (
           <motion.div
             className="mobile-menu"
-            initial={{
-              opacity: 0,
-              height: 0,
-            }}
-            animate={{
-              opacity: 1,
-              height: "auto",
-            }}
-            exit={{
-              opacity: 0,
-              height: 0,
-            }}
-            transition={{
-              duration: 0.25,
-            }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
           >
             <a
               href="#home"
               onClick={(e) => {
                 e.preventDefault();
-
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth",
-                });
-
+                window.scrollTo({ top: 0, behavior: "smooth" });
                 setMenuOpen(false);
               }}
             >
               Home
             </a>
-
             <a
               href="#features"
               onClick={(e) => {
                 e.preventDefault();
-
-                document
-                  .getElementById("features")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-
+                document.getElementById("features")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
                 setMenuOpen(false);
               }}
             >
               Features
             </a>
-
             <a
               href="#how-it-works"
               onClick={(e) => {
                 e.preventDefault();
-
-                document
-                  .getElementById("how-it-works")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-
+                document.getElementById("how-it-works")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
                 setMenuOpen(false);
               }}
             >
@@ -184,29 +137,16 @@ function LandingPage() {
           ✨ Smarter Resume Insights
         </motion.div>
 
-        <motion.h1
-          initial="hidden"
-          animate="visible"
-          custom={1}
-          variants={fadeUp}
-        >
+        <motion.h1 initial="hidden" animate="visible" custom={1} variants={fadeUp}>
           Know if your resume passes the ATS
           <br />
-          <span className="gradient-text">
-            before you hit apply.
-          </span>
+          <span className="gradient-text">before you hit apply.</span>
         </motion.h1>
 
-        <motion.p
-          initial="hidden"
-          animate="visible"
-          custom={2}
-          variants={fadeUp}
-        >
-          Upload your resume, tell us the role you're targeting,
-          and get an AI-powered analysis with a real ATS-style
-          score, honest feedback, and concrete suggestions to
-          improve.
+        <motion.p initial="hidden" animate="visible" custom={2} variants={fadeUp}>
+          Upload your resume, tell us the role you're targeting, and get an
+          AI-powered analysis with a real ATS-style score, honest feedback,
+          and concrete suggestions to improve.
         </motion.p>
 
         <motion.button
@@ -215,11 +155,7 @@ function LandingPage() {
           animate="visible"
           custom={3}
           variants={fadeUp}
-          whileHover={{
-            scale: 1.04,
-            boxShadow:
-              "0 8px 30px rgba(59,130,246,0.4)",
-          }}
+          whileHover={{ scale: 1.04, boxShadow: "0 8px 30px rgba(59,130,246,0.4)" }}
           whileTap={{ scale: 0.97 }}
           onClick={() => navigate("/ats-score")}
         >
@@ -249,37 +185,20 @@ function LandingPage() {
           <motion.div
             key={f.title}
             className="feature-card"
-            initial={{
-              opacity: 1,
-              y: 0,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            whileHover={{
-              y: -6,
-            }}
-            transition={{
-              duration: 0.3,
-            }}
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -6 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="feature-icon">
-              {f.icon}
-            </div>
-
+            <div className="feature-icon">{f.icon}</div>
             <h3>{f.title}</h3>
-
             <p>{f.desc}</p>
           </motion.div>
         ))}
       </section>
 
       {/* ================= HOW IT WORKS ================= */}
-      <section
-        className="how-it-works"
-        id="how-it-works"
-      >
+      <section className="how-it-works" id="how-it-works">
         <h2>How It Works</h2>
 
         <div className="steps-row">
@@ -303,29 +222,13 @@ function LandingPage() {
             <motion.div
               key={step.num}
               className="step-card"
-              initial={{
-                opacity: 0,
-                y: 30,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-                amount: 0.3,
-              }}
-              transition={{
-                delay: i * 0.15,
-                duration: 0.5,
-              }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: i * 0.15, duration: 0.5 }}
             >
-              <div className="step-num">
-                {step.num}
-              </div>
-
+              <div className="step-num">{step.num}</div>
               <h3>{step.title}</h3>
-
               <p>{step.desc}</p>
             </motion.div>
           ))}

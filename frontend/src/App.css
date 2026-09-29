@@ -1050,7 +1050,6 @@ button.secondary:hover {
 .mobile-menu {
   display: none;
   flex-direction: column;
-  overflow: hidden;
   background: var(--card-bg);
   border-bottom: 1px solid var(--card-border);
   position: relative;
