@@ -7,7 +7,8 @@ from google.genai import types
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
+# Key na ho (jaise CI me) to import pe crash nahi hoga
+client = genai.Client(api_key=api_key) if api_key else None
 
 MODEL_NAME = "gemini-3.6-flash"
 
@@ -51,6 +52,9 @@ IMPORTANT: Respond ENTIRELY in clear, professional English. Do not use any other
 """
 
     try:
+        if client is None:
+            return {"error": "GEMINI_API_KEY is not set"}
+
         response = client.models.generate_content(
             model=MODEL_NAME,
             contents=prompt,
@@ -110,6 +114,9 @@ IMPORTANT: Respond ENTIRELY in clear, professional English.
 """
 
     try:
+        if client is None:
+            return {"error": "GEMINI_API_KEY is not set"}
+
         response = client.models.generate_content(
             model=MODEL_NAME,
             contents=prompt,
