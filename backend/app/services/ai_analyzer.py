@@ -1,14 +1,15 @@
 import os
 import json
-import google.generativeai as genai
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+client = genai.Client(api_key=api_key)
 
-model = genai.GenerativeModel("gemini-3.6-flash")
+MODEL_NAME = "gemini-3.6-flash"
 
 
 def analyze_resume_with_ai(resume_text: str, target_role: str) -> dict:
@@ -50,7 +51,13 @@ IMPORTANT: Respond ENTIRELY in clear, professional English. Do not use any other
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json"
+            ),
+        )
         raw_text = response.text.strip()
 
         if raw_text.startswith("```"):
@@ -103,7 +110,10 @@ IMPORTANT: Respond ENTIRELY in clear, professional English.
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
         answer = response.text.strip()
         return {"reply": answer}
 

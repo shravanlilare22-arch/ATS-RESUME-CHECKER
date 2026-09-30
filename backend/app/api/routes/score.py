@@ -16,6 +16,8 @@ async def analyze_resume(
     file: UploadFile = File(...),
     target_role: str = Form(...)
 ):
+    target_role = target_role.strip()
+
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -26,6 +28,10 @@ async def analyze_resume(
         return {"error": str(e)}
 
     result = analyze_resume_with_ai(resume_text, target_role)
+
+    # AI fail hua to MongoDB me save mat karo, seedha error wapas bhejo
+    if "error" in result:
+        return result
 
     response = {
         "filename": file.filename,

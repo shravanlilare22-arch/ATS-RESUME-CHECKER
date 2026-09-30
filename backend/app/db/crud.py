@@ -18,16 +18,21 @@ def save_analysis(filename: str, result: dict) -> str:
 
 
 def get_history(limit: int = 20) -> list:
-    """Latest analyses ki list (sabse nayi pehle)."""
+    """Latest analyses ki list (sabse nayi pehle). resume_text list me nahi aata, taaki response halka rahe."""
     items = []
-    for doc in analyses_collection.find().sort("created_at", -1).limit(limit):
+    cursor = (
+        analyses_collection.find({}, {"result.resume_text": 0})
+        .sort("created_at", -1)
+        .limit(limit)
+    )
+    for doc in cursor:
         doc["_id"] = str(doc["_id"])
         items.append(doc)
     return items
 
 
 def get_analysis(analysis_id: str):
-    """Ek analysis id se nikalta hai. Na mile ya id galat ho to None."""
+    """Ek analysis poori detail ke saath. Na mile ya id galat ho to None."""
     try:
         doc = analyses_collection.find_one({"_id": ObjectId(analysis_id)})
     except InvalidId:
@@ -35,3 +40,12 @@ def get_analysis(analysis_id: str):
     if doc:
         doc["_id"] = str(doc["_id"])
     return doc
+
+
+def delete_analysis(analysis_id: str) -> bool:
+    """Ek analysis delete karta hai. Delete hua to True, nahi mila ya id galat to False."""
+    try:
+        deleted = analyses_collection.delete_one({"_id": ObjectId(analysis_id)})
+    except InvalidId:
+        return False
+    return deleted.deleted_count == 1

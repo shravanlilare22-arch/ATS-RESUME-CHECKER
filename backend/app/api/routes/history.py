@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.db.crud import get_analysis, get_history
+from app.db.crud import delete_analysis, get_analysis, get_history
 
 router = APIRouter()
 
@@ -16,3 +16,10 @@ def history_item(analysis_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Analysis not found")
     return doc
+
+
+@router.delete("/history/{analysis_id}")
+def history_delete(analysis_id: str):
+    if not delete_analysis(analysis_id):
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    return {"message": "Deleted", "id": analysis_id}
