@@ -4,12 +4,10 @@ python-multipart
 pdfplumber
 python-docx
 httpx
-google-generativeai
+google-genai
 python-dotenv
 sqlalchemy
 passlib[bcrypt]
 python-jose[cryptography]
 pymongo
-python-dotenv
 dnspython
-uvicorn
