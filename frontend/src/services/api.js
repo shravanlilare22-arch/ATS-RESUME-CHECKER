@@ -39,3 +39,10 @@ export const chatAboutResume = async (
 
   return response.data;
 };
+export const saveVisitor = async (name, email) => {
+  const response = await axios.post(`${API_BASE_URL}/visitor`, {
+    name,
+    email,
+  });
+  return response.data;
+};

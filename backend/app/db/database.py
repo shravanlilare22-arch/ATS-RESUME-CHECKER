@@ -17,3 +17,4 @@ if not MONGO_URI:
 client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
 db = client["ats_resume_checker"]
 analyses_collection = db["analyses"]
+visitors_collection = db["visitors"]

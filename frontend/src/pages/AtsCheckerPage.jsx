@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { analyzeResume, chatAboutResume } from "../services/api";
 import "../App.css";
+
 function GaugeScore({ value }) {
   const [display, setDisplay] = useState(0);
 
@@ -54,36 +55,6 @@ function GaugeScore({ value }) {
         <span className="gauge-number">{display}</span>
         <span className="gauge-outof">/100</span>
       </div>
-    </div>
-  );
-}
-
-function AnimatedScore({ value, colorClass }) {
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    let start = 0;
-    const duration = 1000;
-    const stepTime = 16;
-    const steps = duration / stepTime;
-    const increment = value / steps;
-
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= value) {
-        setDisplay(value);
-        clearInterval(timer);
-      } else {
-        setDisplay(Math.round(start));
-      }
-    }, stepTime);
-
-    return () => clearInterval(timer);
-  }, [value]);
-
-  return (
-    <div className={`score-circle ${colorClass}`}>
-      <span>{display}%</span>
     </div>
   );
 }

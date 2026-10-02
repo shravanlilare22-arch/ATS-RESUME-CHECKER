@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import score, chat, history
+from app.api.routes import score, chat, history, visitor
 
 app = FastAPI()
 
@@ -16,6 +16,7 @@ app.add_middleware(
 app.include_router(score.router)
 app.include_router(chat.router)
 app.include_router(history.router)
+app.include_router(visitor.router)
 
 
 @app.get("/")

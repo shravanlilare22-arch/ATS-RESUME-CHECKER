@@ -1127,3 +1127,47 @@ button.secondary:hover {
     font-size: 15px;
   }
 }
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.modal-box {
+  background: #16132b;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 28px;
+  width: 380px;
+  max-width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-box h3 {
+  color: var(--text-primary);
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.modal-subtext {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+.nav-login-btn {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: none;
+}

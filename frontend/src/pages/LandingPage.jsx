@@ -2,23 +2,38 @@ import { useState } from "react";
 import logo from "../assets/logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import NameEmailModal from "../components/NameEmailModal";
+import { saveVisitor } from "../services/api";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: {
-      delay: i * 0.15,
-      duration: 0.6,
-      ease: "easeOut",
-    },
+    transition: { delay: i * 0.15, duration: 0.6, ease: "easeOut" },
   }),
 };
 
 function LandingPage() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showVisitorModal, setShowVisitorModal] = useState(false);
+
+  const handleCheckResumeClick = () => {
+    const alreadySubmitted = sessionStorage.getItem("visitorSubmitted");
+    if (alreadySubmitted) {
+      navigate("/ats-score");
+    } else {
+      setShowVisitorModal(true);
+    }
+  };
+
+  const handleVisitorSubmit = async (name, email) => {
+    await saveVisitor(name, email);
+    sessionStorage.setItem("visitorSubmitted", "true");
+    setShowVisitorModal(false);
+    navigate("/ats-score");
+  };
 
   return (
     <>
@@ -68,6 +83,9 @@ function LandingPage() {
           >
             How It Works
           </a>
+          <button className="nav-login-btn" onClick={() => setShowVisitorModal(true)}>
+            👤 Get Started
+          </button>
         </div>
 
         <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
@@ -121,6 +139,16 @@ function LandingPage() {
             >
               How It Works
             </a>
+            <a
+              href="#get-started"
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                setShowVisitorModal(true);
+              }}
+            >
+              👤 Get Started
+            </a>
           </motion.div>
         )}
       </AnimatePresence>
@@ -157,7 +185,7 @@ function LandingPage() {
           variants={fadeUp}
           whileHover={{ scale: 1.04, boxShadow: "0 8px 30px rgba(59,130,246,0.4)" }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate("/ats-score")}
+          onClick={handleCheckResumeClick}
         >
           Check my resume →
         </motion.button>
@@ -203,21 +231,9 @@ function LandingPage() {
 
         <div className="steps-row">
           {[
-            {
-              num: "1",
-              title: "Upload Resume",
-              desc: "Upload your resume in PDF or DOCX format.",
-            },
-            {
-              num: "2",
-              title: "Enter Target Role",
-              desc: "Tell us the job role you're applying for.",
-            },
-            {
-              num: "3",
-              title: "Get AI Analysis",
-              desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly.",
-            },
+            { num: "1", title: "Upload Resume", desc: "Upload your resume in PDF or DOCX format." },
+            { num: "2", title: "Enter Target Role", desc: "Tell us the job role you're applying for." },
+            { num: "3", title: "Get AI Analysis", desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly." },
           ].map((step, i) => (
             <motion.div
               key={step.num}
@@ -245,6 +261,13 @@ function LandingPage() {
       >
         Built with FastAPI, React, and Google Gemini
       </motion.footer>
+
+      {showVisitorModal && (
+        <NameEmailModal
+          onSubmit={handleVisitorSubmit}
+          onClose={() => setShowVisitorModal(false)}
+        />
+      )}
     </>
   );
 }
