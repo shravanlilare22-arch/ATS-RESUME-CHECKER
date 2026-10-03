@@ -54,12 +54,12 @@ body {
   margin: 0;
 }
 
+/* Pehle yahan width: 1126px aur border-inline tha, wo hata diya.
+   Ab page poori width lega. text-align: center isliye rakha hai
+   kyunki baaki pages (ATS, feature cards) isi pe depend karte hain. */
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
+  width: 100%;
   text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
