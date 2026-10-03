@@ -59,6 +59,107 @@ function GaugeScore({ value }) {
   );
 }
 
+
+function ProfileMenu() {
+  const navigate = useNavigate();
+
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const [user, setUser] = useState(() => {
+    try {
+      const savedProfile = localStorage.getItem("visitorProfile");
+      return savedProfile ? JSON.parse(savedProfile) : null;
+    } catch (error) {
+      console.error("Failed to load visitor profile:", error);
+      return null;
+    }
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem("visitorProfile");
+    sessionStorage.removeItem("visitorSubmitted");
+    setUser(null);
+    setProfileOpen(false);
+    navigate("/");
+  };
+
+  if (!user) {
+    return (
+      <button
+        type="button"
+        className="ats-profile-button"
+        onClick={() => navigate("/")}
+      >
+        👤 Get Started
+      </button>
+    );
+  }
+
+  return (
+    <div className="ats-profile-wrapper">
+      <button
+        type="button"
+        className="ats-profile-button"
+        onClick={() => setProfileOpen((prev) => !prev)}
+      >
+        <span className="ats-profile-avatar-small">
+          {user.name?.charAt(0).toUpperCase() || "U"}
+        </span>
+        <span className="ats-profile-name">
+          {user.name}
+        </span>
+        <span className="ats-profile-arrow">
+          {profileOpen ? "▲" : "▼"}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {profileOpen && (
+          <motion.div
+            className="ats-profile-dropdown"
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.18 }}
+          >
+            <div className="ats-profile-dropdown-header">
+              <div className="ats-profile-avatar-large">
+                {user.name?.charAt(0).toUpperCase() || "U"}
+              </div>
+
+              <div className="ats-profile-user-info">
+                <strong>{user.name}</strong>
+                <span>{user.email}</span>
+              </div>
+            </div>
+
+            <div className="ats-profile-divider"></div>
+
+            <button
+              type="button"
+              className="ats-profile-menu-item"
+              onClick={() => {
+                setProfileOpen(false);
+                navigate("/profile");
+              }}
+            >
+              👤 Profile
+            </button>
+
+            <button
+              type="button"
+              className="ats-profile-menu-item ats-logout-item"
+              onClick={handleLogout}
+            >
+              🚪 Logout
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function AtsCheckerPage() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
@@ -179,8 +280,19 @@ function AtsCheckerPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <button className="back-link" onClick={() => navigate("/")}>← Back</button>
+          <div className="ats-header-topbar">
+            <button
+              className="back-link"
+              onClick={() => navigate("/")}
+            >
+              ← Back
+            </button>
+
+            <ProfileMenu />
+          </div>
+
           <h1>ATS Resume Checker</h1>
+
           <p className="subtitle">
             Upload your resume and tell us your target role.
           </p>

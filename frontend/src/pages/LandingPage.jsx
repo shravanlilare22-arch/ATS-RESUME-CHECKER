@@ -10,29 +10,102 @@ const fadeUp = {
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.15, duration: 0.6, ease: "easeOut" },
+    transition: {
+      delay: i * 0.15,
+      duration: 0.6,
+      ease: "easeOut",
+    },
   }),
 };
 
 function LandingPage() {
   const navigate = useNavigate();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [showVisitorModal, setShowVisitorModal] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
+  // Load saved visitor profile from localStorage
+  const [user, setUser] = useState(() => {
+    try {
+      const savedProfile = localStorage.getItem("visitorProfile");
+      return savedProfile ? JSON.parse(savedProfile) : null;
+    } catch (error) {
+      console.error("Failed to load visitor profile:", error);
+      return null;
+    }
+  });
+
+  // ================= CHECK RESUME =================
   const handleCheckResumeClick = () => {
-    const alreadySubmitted = sessionStorage.getItem("visitorSubmitted");
-    if (alreadySubmitted) {
+    const savedProfile = localStorage.getItem("visitorProfile");
+
+    if (savedProfile) {
       navigate("/ats-score");
     } else {
       setShowVisitorModal(true);
     }
   };
 
+  // ================= VISITOR SUBMIT =================
   const handleVisitorSubmit = async (name, email) => {
-    await saveVisitor(name, email);
-    sessionStorage.setItem("visitorSubmitted", "true");
-    setShowVisitorModal(false);
-    navigate("/ats-score");
+    try {
+      // Save visitor to MongoDB
+      const response = await saveVisitor(name, email);
+
+      // Create profile object
+      const profile = {
+        name: name,
+        email: email,
+        visitorId: response?.visitor_id || null,
+      };
+
+      // Save profile in browser
+      localStorage.setItem("visitorProfile", JSON.stringify(profile));
+
+      // Keep session flag for existing flow
+      sessionStorage.setItem("visitorSubmitted", "true");
+
+      // Update navbar immediately
+      setUser(profile);
+
+      // Close modal
+      setShowVisitorModal(false);
+
+      // Go to ATS checker
+      navigate("/ats-score");
+    } catch (error) {
+      console.error("Visitor submission failed:", error);
+
+      // Important:
+      // Throw error back to NameEmailModal so it can show
+      // "Something went wrong. Please try again."
+      throw error;
+    }
+  };
+
+  // ================= LOGOUT =================
+  const handleLogout = () => {
+    localStorage.removeItem("visitorProfile");
+    sessionStorage.removeItem("visitorSubmitted");
+
+    setUser(null);
+    setProfileOpen(false);
+    setMenuOpen(false);
+
+    // Return to landing page
+    navigate("/");
+  };
+
+  // ================= PROFILE CLICK =================
+  const handleProfileClick = () => {
+    setProfileOpen((prev) => !prev);
+  };
+
+  // ================= PROFILE PAGE =================
+  const handleProfilePage = () => {
+    setProfileOpen(false);
+    navigate("/profile");
   };
 
   return (
@@ -45,7 +118,11 @@ function LandingPage() {
         transition={{ duration: 0.5 }}
       >
         <span className="logo">
-          <img src={logo} alt="ATS Resume Checker" className="logo-img" />
+          <img
+            src={logo}
+            alt="ATS Resume Checker"
+            className="logo-img"
+          />
           ATS Resume Checker
         </span>
 
@@ -54,11 +131,15 @@ function LandingPage() {
             href="#home"
             onClick={(e) => {
               e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
             }}
           >
             Home
           </a>
+
           <a
             href="#features"
             onClick={(e) => {
@@ -71,24 +152,107 @@ function LandingPage() {
           >
             Features
           </a>
+
           <a
             href="#how-it-works"
             onClick={(e) => {
               e.preventDefault();
-              document.getElementById("how-it-works")?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
+              document
+                .getElementById("how-it-works")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
             }}
           >
             How It Works
           </a>
-          <button className="nav-login-btn" onClick={() => setShowVisitorModal(true)}>
-            👤 Get Started
-          </button>
+
+          {/* ================= USER PROFILE / GET STARTED ================= */}
+          {user ? (
+            <div className="profile-wrapper">
+              <button
+                className="nav-login-btn"
+                onClick={handleProfileClick}
+              >
+                👤 {user.name}
+                <span
+                  style={{
+                    marginLeft: "6px",
+                    fontSize: "11px",
+                  }}
+                >
+                  {profileOpen ? "▲" : "▼"}
+                </span>
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div
+                    className="profile-dropdown"
+                    initial={{
+                      opacity: 0,
+                      y: -8,
+                      scale: 0.97,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: -8,
+                      scale: 0.97,
+                    }}
+                    transition={{
+                      duration: 0.2,
+                    }}
+                  >
+                    <div className="profile-header">
+                      <div className="profile-avatar">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+
+                      <div className="profile-info">
+                        <strong>{user.name}</strong>
+                        <span>{user.email}</span>
+                      </div>
+                    </div>
+
+                    <div className="profile-divider"></div>
+
+                    <button
+                      className="profile-menu-item"
+                      onClick={handleProfilePage}
+                    >
+                      👤 Profile
+                    </button>
+
+                    <button
+                      className="profile-menu-item logout-item"
+                      onClick={handleLogout}
+                    >
+                      🚪 Logout
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <button
+              className="nav-login-btn"
+              onClick={() => setShowVisitorModal(true)}
+            >
+              👤 Get Started
+            </button>
+          )}
         </div>
 
-        <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
+        <button
+          className="hamburger"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
           {menuOpen ? "✕" : "☰"}
         </button>
       </motion.nav>
@@ -98,57 +262,118 @@ function LandingPage() {
         {menuOpen && (
           <motion.div
             className="mobile-menu"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            initial={{
+              opacity: 0,
+              y: -10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -10,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
           >
             <a
               href="#home"
               onClick={(e) => {
                 e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
+
+                window.scrollTo({
+                  top: 0,
+                  behavior: "smooth",
+                });
+
                 setMenuOpen(false);
               }}
             >
               Home
             </a>
+
             <a
               href="#features"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById("features")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+
+                document
+                  .getElementById("features")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+
                 setMenuOpen(false);
               }}
             >
               Features
             </a>
+
             <a
               href="#how-it-works"
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById("how-it-works")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                });
+
+                document
+                  .getElementById("how-it-works")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+
                 setMenuOpen(false);
               }}
             >
               How It Works
             </a>
-            <a
-              href="#get-started"
-              onClick={(e) => {
-                e.preventDefault();
-                setMenuOpen(false);
-                setShowVisitorModal(true);
-              }}
-            >
-              👤 Get Started
-            </a>
+
+            {/* ================= MOBILE USER ================= */}
+            {user ? (
+              <div className="mobile-profile-section">
+                <div className="mobile-profile-header">
+                  <div className="profile-avatar">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+
+                  <div className="profile-info">
+                    <strong>{user.name}</strong>
+                    <span>{user.email}</span>
+                  </div>
+                </div>
+
+                <button
+                  className="mobile-profile-btn"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/profile");
+                  }}
+                >
+                  👤 Profile
+                </button>
+
+                <button
+                  className="mobile-profile-btn logout-item"
+                  onClick={handleLogout}
+                >
+                  🚪 Logout
+                </button>
+              </div>
+            ) : (
+              <a
+                href="#get-started"
+                onClick={(e) => {
+                  e.preventDefault();
+
+                  setMenuOpen(false);
+                  setShowVisitorModal(true);
+                }}
+              >
+                👤 Get Started
+              </a>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -165,16 +390,29 @@ function LandingPage() {
           ✨ Smarter Resume Insights
         </motion.div>
 
-        <motion.h1 initial="hidden" animate="visible" custom={1} variants={fadeUp}>
+        <motion.h1
+          initial="hidden"
+          animate="visible"
+          custom={1}
+          variants={fadeUp}
+        >
           Know if your resume passes the ATS
           <br />
-          <span className="gradient-text">before you hit apply.</span>
+          <span className="gradient-text">
+            before you hit apply.
+          </span>
         </motion.h1>
 
-        <motion.p initial="hidden" animate="visible" custom={2} variants={fadeUp}>
-          Upload your resume, tell us the role you're targeting, and get an
-          AI-powered analysis with a real ATS-style score, honest feedback,
-          and concrete suggestions to improve.
+        <motion.p
+          initial="hidden"
+          animate="visible"
+          custom={2}
+          variants={fadeUp}
+        >
+          Upload your resume, tell us the role you're targeting,
+          and get an AI-powered analysis with a real ATS-style
+          score, honest feedback, and concrete suggestions to
+          improve.
         </motion.p>
 
         <motion.button
@@ -183,8 +421,14 @@ function LandingPage() {
           animate="visible"
           custom={3}
           variants={fadeUp}
-          whileHover={{ scale: 1.04, boxShadow: "0 8px 30px rgba(59,130,246,0.4)" }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{
+            scale: 1.04,
+            boxShadow:
+              "0 8px 30px rgba(59,130,246,0.4)",
+          }}
+          whileTap={{
+            scale: 0.97,
+          }}
           onClick={handleCheckResumeClick}
         >
           Check my resume →
@@ -213,12 +457,25 @@ function LandingPage() {
           <motion.div
             key={f.title}
             className="feature-card"
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -6 }}
-            transition={{ duration: 0.3 }}
+            initial={{
+              opacity: 1,
+              y: 0,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            whileHover={{
+              y: -6,
+            }}
+            transition={{
+              duration: 0.3,
+            }}
           >
-            <div className="feature-icon">{f.icon}</div>
+            <div className="feature-icon">
+              {f.icon}
+            </div>
+
             <h3>{f.title}</h3>
             <p>{f.desc}</p>
           </motion.div>
@@ -226,24 +483,54 @@ function LandingPage() {
       </section>
 
       {/* ================= HOW IT WORKS ================= */}
-      <section className="how-it-works" id="how-it-works">
+      <section
+        className="how-it-works"
+        id="how-it-works"
+      >
         <h2>How It Works</h2>
 
         <div className="steps-row">
           {[
-            { num: "1", title: "Upload Resume", desc: "Upload your resume in PDF or DOCX format." },
-            { num: "2", title: "Enter Target Role", desc: "Tell us the job role you're applying for." },
-            { num: "3", title: "Get AI Analysis", desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly." },
+            {
+              num: "1",
+              title: "Upload Resume",
+              desc: "Upload your resume in PDF or DOCX format.",
+            },
+            {
+              num: "2",
+              title: "Enter Target Role",
+              desc: "Tell us the job role you're applying for.",
+            },
+            {
+              num: "3",
+              title: "Get AI Analysis",
+              desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly.",
+            },
           ].map((step, i) => (
             <motion.div
               key={step.num}
               className="step-card"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ delay: i * 0.15, duration: 0.5 }}
+              initial={{
+                opacity: 0,
+                y: 30,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.3,
+              }}
+              transition={{
+                delay: i * 0.15,
+                duration: 0.5,
+              }}
             >
-              <div className="step-num">{step.num}</div>
+              <div className="step-num">
+                {step.num}
+              </div>
+
               <h3>{step.title}</h3>
               <p>{step.desc}</p>
             </motion.div>
@@ -254,14 +541,23 @@ function LandingPage() {
       {/* ================= FOOTER ================= */}
       <motion.footer
         className="landing-footer"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
+        initial={{
+          opacity: 0,
+        }}
+        whileInView={{
+          opacity: 1,
+        }}
+        viewport={{
+          once: true,
+        }}
+        transition={{
+          duration: 0.6,
+        }}
       >
         Built with FastAPI, React, and Google Gemini
       </motion.footer>
 
+      {/* ================= VISITOR MODAL ================= */}
       {showVisitorModal && (
         <NameEmailModal
           onSubmit={handleVisitorSubmit}

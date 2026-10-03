@@ -11,3 +11,4 @@ passlib[bcrypt]
 python-jose[cryptography]
 pymongo
 dnspython
+resend

@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+
 from app.db.visitor_crud import save_visitor, get_visitors
+from app.services.email_service import send_welcome_email
+
 
 router = APIRouter()
 
@@ -18,8 +21,16 @@ async def create_visitor(visitor: VisitorRequest):
     if not name or not email:
         return {"error": "Name and email are required."}
 
+    # Save visitor in MongoDB
     visitor_id = save_visitor(name, email)
-    return {"visitor_id": visitor_id}
+
+    # Send welcome email
+    send_welcome_email(email, name)
+
+    return {
+        "visitor_id": visitor_id,
+        "message": "Visitor saved successfully and welcome email processed."
+    }
 
 
 @router.get("/visitors")
