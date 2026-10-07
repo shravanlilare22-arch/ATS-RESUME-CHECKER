@@ -20,8 +20,7 @@
 
 body {
   margin: 0;
-  overflow-x: clip;
-  /* hidden nahi: sticky navbar chalta rahe */
+  overflow-x: clip; /* hidden nahi: sticky navbar chalta rahe */
   background: radial-gradient(ellipse 90% 60% at 50% -10%, rgba(139, 122, 255, 0.18), transparent),
     var(--bg-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -694,7 +693,6 @@ button.secondary:hover {
 }
 
 @keyframes typingBounce {
-
   0%,
   60%,
   100% {
@@ -804,8 +802,7 @@ button.secondary:hover {
 .lp-nav,
 .lp-drawer-root,
 .lp-hero {
-  text-align: left;
-  /* #root center hai, yahan left chahiye */
+  text-align: left; /* #root center hai, yahan left chahiye */
 }
 
 .lp-nav {
@@ -1489,7 +1486,6 @@ button.secondary:hover {
 }
 
 @media (max-width: 700px) {
-
   .features,
   .steps-row {
     grid-template-columns: 1fr;
@@ -1503,8 +1499,8 @@ button.secondary:hover {
     font-size: 15px;
   }
 
-  .lp-cta,
-  .lp-ghost {
+  .lp-hero .lp-cta,
+  .lp-hero .lp-ghost {
     flex: 1 1 100%;
     text-align: center;
   }
@@ -1553,7 +1549,9 @@ button.secondary:hover {
 }
 
 /* =========================================================
-   11. PROFILE DROPDOWN (shared) + PROFILE PAGE
+   11. PROFILE DROPDOWN (shared) + OLD PROFILE PAGE
+   (ProfilePage ab pf-* use karta hai; ye purane blocks
+    baaki components ke liye rakhe hain)
    ========================================================= */
 
 .profile-wrapper,
@@ -1664,9 +1662,11 @@ button.secondary:hover {
   padding: 110px 7% 60px;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at top right,
+    radial-gradient(
+      circle at top right,
       rgba(99, 102, 241, 0.16),
-      transparent 35%),
+      transparent 35%
+    ),
     #0d0b20;
   color: white;
 }
@@ -1749,7 +1749,7 @@ button.secondary:hover {
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.profile-detail-card>div {
+.profile-detail-card > div {
   min-width: 0;
 }
 
@@ -2052,7 +2052,7 @@ button.secondary:hover {
 }
 
 /* =========================================================
-   13. RESPONSIVE: PROFILE + ATS HEADER
+   13. RESPONSIVE: OLD PROFILE + ATS HEADER
    ========================================================= */
 
 @media (max-width: 650px) {
@@ -2142,4 +2142,486 @@ button.secondary:hover {
   .profile-topbar .ats-profile-name {
     max-width: 90px;
   }
+}
+
+/* =========================================================
+   14. PROFILE PAGE (NEW)
+   ========================================================= */
+
+.pf-page {
+  min-height: 100vh;
+  text-align: left; /* #root center hai, yahan left chahiye */
+  color: var(--text-primary);
+}
+
+/* global button { flex:1 } ko neutralize */
+.pf-page button {
+  flex: none;
+}
+
+/* ---------- top bar ---------- */
+
+.pf-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px max(16px, 5vw);
+  background: rgba(13, 11, 31, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.pf-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pf-back:hover {
+  color: var(--text-primary);
+  border-color: rgba(139, 122, 255, 0.4);
+  background: rgba(139, 122, 255, 0.1);
+}
+
+.pf-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.pf-brand:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.pf-brand img {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.pf-brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- main ---------- */
+
+.pf-main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 44px 20px 80px;
+}
+
+.pf-welcome {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.pf-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid rgba(139, 122, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(139, 122, 255, 0.1);
+  color: #c4b8ff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.pf-welcome h1 {
+  margin: 16px 0 8px;
+  color: var(--text-primary);
+  font-size: clamp(28px, 6vw, 42px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.pf-wave {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: pfWave 2.4s ease-in-out infinite;
+}
+
+@keyframes pfWave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(14deg); }
+  20%, 40% { transform: rotate(-8deg); }
+  50% { transform: rotate(10deg); }
+}
+
+.pf-welcome p {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+/* ---------- card ---------- */
+
+.pf-card {
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.pf-cover {
+  height: 96px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 45%),
+    linear-gradient(135deg, rgba(139, 122, 255, 0.6), rgba(96, 165, 250, 0.45));
+}
+
+.pf-identity {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  margin-top: -44px;
+  padding: 0 28px 26px;
+}
+
+.pf-avatar {
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 4px solid #1a1736;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  color: #fff;
+  font-size: 38px;
+  font-weight: 800;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+}
+
+.pf-who {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.pf-who h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+}
+
+.pf-email-line {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.pf-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #6ee7a0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pf-active i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+}
+
+/* ---------- details ---------- */
+
+.pf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 0 28px;
+}
+
+.pf-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.pf-item:hover {
+  border-color: rgba(139, 122, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pf-item-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(139, 122, 255, 0.14);
+  color: #c4b8ff;
+}
+
+.pf-item-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.pf-item-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pf-item-value {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.pf-item-value.ok {
+  color: #6ee7a0;
+}
+
+.pf-copy {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.pf-copy:hover {
+  background: rgba(139, 122, 255, 0.2);
+  color: var(--text-primary);
+}
+
+/* ---------- actions ---------- */
+
+.pf-actions {
+  display: flex;
+  gap: 12px;
+  padding: 26px 28px 28px;
+}
+
+.pf-actions .pf-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 18px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pf-btn.primary {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(139, 122, 255, 0.3);
+}
+
+.pf-btn.primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+.pf-btn.danger {
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ff9c9c;
+}
+
+.pf-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+  transform: translateY(-2px);
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 560px) {
+  .pf-brand span {
+    display: none;
+  }
+
+  .pf-main {
+    padding: 30px 16px 60px;
+  }
+
+  .pf-cover {
+    height: 80px;
+  }
+
+  .pf-identity {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: -46px;
+    padding: 0 20px 24px;
+    text-align: center;
+  }
+
+  .pf-who {
+    align-items: center;
+  }
+
+  .pf-grid {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
+  }
+
+  .pf-actions {
+    flex-direction: column;
+    padding: 20px 16px 22px;
+  }
+}
+
+/* =========================================================
+   15. PROFILE PAGE: LOGO PREVIEW
+   ========================================================= */
+
+.pf-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(5, 4, 15, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.pf-lightbox-box {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  padding: 36px 28px 28px;
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  background: var(--bg-secondary);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.pf-lightbox-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-secondary);
+}
+
+.pf-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+}
+
+.pf-lightbox-img {
+  width: min(220px, 60vw);
+  height: min(220px, 60vw);
+  margin: 0 auto 20px;
+  display: block;
+  border-radius: 40px;
+  object-fit: cover;
+  box-shadow: 0 16px 50px rgba(139, 122, 255, 0.35);
+}
+
+.pf-lightbox-box h3 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.pf-lightbox-box p {
+  margin: 0 0 22px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.pf-lightbox-home {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(139, 122, 255, 0.3);
+}
+
+.pf-lightbox-home:hover {
+  filter: brightness(1.08);
 }

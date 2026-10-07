@@ -1,531 +1,303 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import logo from "../assets/logo.png";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.12, duration: 0.5, ease: "easeOut" },
+  }),
+};
+
+// ================= ICONS =================
+const ICONS = {
+  back: <path d="M19 12H5M12 19l-7-7 7-7" />,
+  user: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+    </>
+  ),
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
+      <path d="M14 3v5h5M9 13h6M9 17h6" />
+    </>
+  ),
+  check: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.5 2.5L16 9.5" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+      <path d="M16 17l5-5-5-5M21 12H9" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V6a2 2 0 012-2h9" />
+    </>
+  ),
+  tick: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  home: (
+    <>
+      <path d="M3 11l9-8 9 8" />
+      <path d="M5 10v10h14V10" />
+    </>
+  ),
+};
+
+function Icon({ name, size = 20 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {ICONS[name]}
+    </svg>
+  );
+}
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+  const [logoOpen, setLogoOpen] = useState(false);
 
+  // Saved visitor profile
   const [user] = useState(() => {
     try {
       const saved = localStorage.getItem("visitorProfile");
-
-      if (!saved) {
-        return null;
-      }
-
-      return JSON.parse(saved);
+      return saved ? JSON.parse(saved) : null;
     } catch (error) {
-      console.error("Profile loading error:", error);
+      console.error("Failed to load visitor profile:", error);
       return null;
     }
   });
 
+  // Profile nahi hai to landing page pe wapas
+  useEffect(() => {
+    if (!user) navigate("/", { replace: true });
+  }, [user, navigate]);
+
+  // Logo preview khula ho to: Esc se band + page scroll band
+  useEffect(() => {
+    if (!logoOpen) return;
+
+    const onKey = (e) => {
+      if (e.key === "Escape") setLogoOpen(false);
+    };
+
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [logoOpen]);
+
+  if (!user) return null;
+
+  const fullName = user.name || "User";
+  const firstName = fullName.trim().split(" ")[0];
+  const displayFirst =
+    firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  const initial = fullName.charAt(0).toUpperCase();
+
   const handleLogout = () => {
     localStorage.removeItem("visitorProfile");
     sessionStorage.removeItem("visitorSubmitted");
-
     navigate("/");
   };
 
-  // ================= NO PROFILE =================
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(user.email || "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (error) {
+      console.error("Copy failed:", error);
+    }
+  };
 
-  if (!user) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#0d0b20",
-          color: "white",
-          padding: "40px",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <button
-          onClick={() => navigate("/")}
-          style={{
-            padding: "12px 20px",
-            borderRadius: "10px",
-            border: "none",
-            background: "#6366f1",
-            color: "white",
-            cursor: "pointer",
-            fontWeight: "600",
-          }}
-        >
-          ← Back Home
-        </button>
-
-        <div
-          style={{
-            maxWidth: "700px",
-            margin: "100px auto",
-            textAlign: "center",
-          }}
-        >
-          <h1>Profile Not Found</h1>
-
-          <p
-            style={{
-              color: "#aaa",
-              marginTop: "15px",
-            }}
-          >
-            Please go back to the home page and enter your name and email.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // ================= PROFILE =================
-
-  const firstLetter =
-    user.name?.charAt(0).toUpperCase() || "U";
+  const details = [
+    { icon: "user", label: "Full name", value: fullName },
+    { icon: "mail", label: "Email address", value: user.email, copy: true },
+    { icon: "file", label: "Service", value: "ATS Resume Analyzer" },
+    { icon: "check", label: "Profile status", value: "Active", ok: true },
+  ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top right, rgba(99,102,241,0.18), transparent 35%), #0d0b20",
-        color: "white",
-        fontFamily: "Arial, sans-serif",
-        padding: "30px",
-      }}
-    >
+    <div className="pf-page">
       {/* ================= TOP BAR ================= */}
-
-      <div
-        style={{
-          maxWidth: "1000px",
-          margin: "0 auto",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "60px",
-        }}
-      >
-        <button
-          onClick={() => navigate("/ats-score")}
-          style={{
-            padding: "11px 18px",
-            borderRadius: "10px",
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(255,255,255,0.06)",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "14px",
-            fontWeight: "600",
-          }}
-        >
-          ← ATS Checker
+      <header className="pf-topbar">
+        <button className="pf-back" onClick={() => navigate("/ats-score")}>
+          <Icon name="back" size={18} />
+          ATS Checker
         </button>
 
-        {/* Profile button */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            padding: "9px 16px",
-            borderRadius: "12px",
-            background:
-              "linear-gradient(135deg, #8b5cf6, #3b82f6)",
-            boxShadow:
-              "0 8px 25px rgba(99,102,241,0.25)",
-          }}
+        {/* Logo pe click -> bada preview */}
+        <button
+          className="pf-brand"
+          onClick={() => setLogoOpen(true)}
+          aria-label="View logo"
         >
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: "700",
-            }}
-          >
-            {firstLetter}
-          </div>
+          <img src={logo} alt="ATS Resume Checker" />
+          <span>ATS Resume Checker</span>
+        </button>
+      </header>
 
-          <span
-            style={{
-              fontWeight: "600",
-              fontSize: "14px",
-            }}
-          >
-            {user.name}
-          </span>
-        </div>
-      </div>
-
-      {/* ================= CONTENT ================= */}
-
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-        }}
-      >
-        {/* Heading */}
-
-        <div
-          style={{
-            marginBottom: "30px",
-          }}
+      <main className="pf-main">
+        {/* ================= WELCOME ================= */}
+        <motion.div
+          className="pf-welcome"
+          initial="hidden"
+          animate="visible"
+          custom={0}
+          variants={fadeUp}
         >
-          <span
-            style={{
-              display: "inline-block",
-              padding: "6px 12px",
-              borderRadius: "20px",
-              background: "rgba(139,92,246,0.12)",
-              border: "1px solid rgba(139,92,246,0.25)",
-              color: "#c4b5fd",
-              fontSize: "11px",
-              fontWeight: "700",
-              letterSpacing: "1px",
-            }}
-          >
-            MY PROFILE
-          </span>
-
-          <h1
-            style={{
-              fontSize: "38px",
-              margin: "14px 0 8px",
-              fontWeight: "700",
-            }}
-          >
-            Welcome, {user.name.split(" ")[0]} 👋
+          <span className="pf-badge">MY PROFILE</span>
+          <h1>
+            Welcome, {displayFirst} <span className="pf-wave">👋</span>
           </h1>
+          <p>Your ATS Resume Checker profile</p>
+        </motion.div>
 
-          <p
-            style={{
-              color: "#aaa8c5",
-              fontSize: "15px",
-              margin: 0,
-            }}
-          >
-            Your ATS Resume Checker profile
-          </p>
-        </div>
-
-        {/* ================= MAIN CARD ================= */}
-
-        <div
-          style={{
-            background: "rgba(255,255,255,0.055)",
-            border:
-              "1px solid rgba(255,255,255,0.10)",
-            borderRadius: "24px",
-            padding: "35px",
-            boxShadow:
-              "0 25px 70px rgba(0,0,0,0.30)",
-          }}
+        {/* ================= PROFILE CARD ================= */}
+        <motion.section
+          className="pf-card"
+          initial="hidden"
+          animate="visible"
+          custom={1}
+          variants={fadeUp}
         >
-          {/* User Header */}
+          <div className="pf-cover" />
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "20px",
-              paddingBottom: "30px",
-              borderBottom:
-                "1px solid rgba(255,255,255,0.09)",
-            }}
-          >
-            {/* Avatar */}
+          <div className="pf-identity">
+            <div className="pf-avatar">{initial}</div>
 
-            <div
-              style={{
-                width: "82px",
-                height: "82px",
-                minWidth: "82px",
-                borderRadius: "50%",
-                background:
-                  "linear-gradient(135deg, #8b5cf6, #3b82f6)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "32px",
-                fontWeight: "700",
-                boxShadow:
-                  "0 12px 35px rgba(99,102,241,0.30)",
-              }}
-            >
-              {firstLetter}
-            </div>
-
-            <div>
-              <h2
-                style={{
-                  margin: "0 0 7px",
-                  fontSize: "25px",
-                }}
-              >
-                {user.name}
-              </h2>
-
-              <p
-                style={{
-                  margin: 0,
-                  color: "#aaa8c5",
-                  fontSize: "14px",
-                }}
-              >
-                {user.email}
-              </p>
-
-              <span
-                style={{
-                  display: "inline-block",
-                  marginTop: "10px",
-                  padding: "5px 10px",
-                  borderRadius: "20px",
-                  background: "rgba(34,197,94,0.10)",
-                  color: "#6ee7a0",
-                  fontSize: "11px",
-                  fontWeight: "700",
-                }}
-              >
-                ● Active Profile
+            <div className="pf-who">
+              <h2>{fullName}</h2>
+              <span className="pf-email-line">{user.email}</span>
+              <span className="pf-active">
+                <i /> Active Profile
               </span>
             </div>
           </div>
 
-          {/* ================= DETAILS ================= */}
+          <div className="pf-grid">
+            {details.map((d) => (
+              <div className="pf-item" key={d.label}>
+                <div className="pf-item-icon">
+                  <Icon name={d.icon} size={20} />
+                </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(2, minmax(0, 1fr))",
-              gap: "18px",
-              marginTop: "30px",
-            }}
-          >
-            {/* Name */}
+                <div className="pf-item-body">
+                  <span className="pf-item-label">{d.label}</span>
+                  <span className={`pf-item-value ${d.ok ? "ok" : ""}`}>
+                    {d.value}
+                  </span>
+                </div>
 
-            <div
-              style={{
-                padding: "20px",
-                borderRadius: "15px",
-                background:
-                  "rgba(255,255,255,0.045)",
-                border:
-                  "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "22px",
-                  marginBottom: "12px",
-                }}
-              >
-                👤
+                {d.copy && (
+                  <button
+                    className="pf-copy"
+                    onClick={handleCopy}
+                    aria-label="Copy email"
+                    title={copied ? "Copied" : "Copy email"}
+                  >
+                    <Icon name={copied ? "tick" : "copy"} size={16} />
+                  </button>
+                )}
               </div>
-
-              <div
-                style={{
-                  color: "#8885a5",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  marginBottom: "7px",
-                }}
-              >
-                Full Name
-              </div>
-
-              <div
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "600",
-                }}
-              >
-                {user.name}
-              </div>
-            </div>
-
-            {/* Email */}
-
-            <div
-              style={{
-                padding: "20px",
-                borderRadius: "15px",
-                background:
-                  "rgba(255,255,255,0.045)",
-                border:
-                  "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "22px",
-                  marginBottom: "12px",
-                }}
-              >
-                📧
-              </div>
-
-              <div
-                style={{
-                  color: "#8885a5",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  marginBottom: "7px",
-                }}
-              >
-                Email Address
-              </div>
-
-              <div
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  wordBreak: "break-word",
-                }}
-              >
-                {user.email}
-              </div>
-            </div>
-
-            {/* Service */}
-
-            <div
-              style={{
-                padding: "20px",
-                borderRadius: "15px",
-                background:
-                  "rgba(255,255,255,0.045)",
-                border:
-                  "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "22px",
-                  marginBottom: "12px",
-                }}
-              >
-                📄
-              </div>
-
-              <div
-                style={{
-                  color: "#8885a5",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  marginBottom: "7px",
-                }}
-              >
-                Service
-              </div>
-
-              <div
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "600",
-                }}
-              >
-                ATS Resume Analyzer
-              </div>
-            </div>
-
-            {/* Status */}
-
-            <div
-              style={{
-                padding: "20px",
-                borderRadius: "15px",
-                background:
-                  "rgba(255,255,255,0.045)",
-                border:
-                  "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "22px",
-                  marginBottom: "12px",
-                }}
-              >
-                ✓
-              </div>
-
-              <div
-                style={{
-                  color: "#8885a5",
-                  fontSize: "11px",
-                  textTransform: "uppercase",
-                  marginBottom: "7px",
-                }}
-              >
-                Profile Status
-              </div>
-
-              <div
-                style={{
-                  color: "#6ee7a0",
-                  fontSize: "15px",
-                  fontWeight: "600",
-                }}
-              >
-                Active
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* ================= BUTTONS ================= */}
-
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              marginTop: "30px",
-            }}
-          >
+          <div className="pf-actions">
             <button
+              className="pf-btn primary"
               onClick={() => navigate("/ats-score")}
-              style={{
-                padding: "13px 20px",
-                border: "none",
-                borderRadius: "11px",
-                background:
-                  "linear-gradient(135deg, #6366f1, #3b82f6)",
-                color: "white",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-                boxShadow:
-                  "0 8px 22px rgba(59,130,246,0.20)",
-              }}
             >
-              📄 Analyze My Resume
+              <Icon name="file" size={18} />
+              Analyze My Resume
             </button>
 
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: "13px 20px",
-                borderRadius: "11px",
-                border:
-                  "1px solid rgba(239,68,68,0.25)",
-                background:
-                  "rgba(239,68,68,0.10)",
-                color: "#ff9b9b",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              🚪 Logout
+            <button className="pf-btn danger" onClick={handleLogout}>
+              <Icon name="logout" size={18} />
+              Logout
             </button>
           </div>
-        </div>
-      </div>
+        </motion.section>
+      </main>
+
+      {/* ================= LOGO PREVIEW ================= */}
+      <AnimatePresence>
+        {logoOpen && (
+          <motion.div
+            className="pf-lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setLogoOpen(false)}
+          >
+            <motion.div
+              className="pf-lightbox-box"
+              initial={{ scale: 0.85, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 20 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="pf-lightbox-close"
+                onClick={() => setLogoOpen(false)}
+                aria-label="Close"
+              >
+                <Icon name="close" size={20} />
+              </button>
+
+              <img
+                className="pf-lightbox-img"
+                src={logo}
+                alt="ATS Resume Checker logo"
+              />
+
+              <h3>ATS Resume Checker</h3>
+              <p>Know if your resume passes the ATS before you hit apply.</p>
+
+              <button
+                className="pf-lightbox-home"
+                onClick={() => navigate("/")}
+              >
+                <Icon name="home" size={18} />
+                Go to Home
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
