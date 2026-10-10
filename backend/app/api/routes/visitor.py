@@ -1,50 +1,38 @@
 import hashlib
-import random
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+import os
+import re
+import secrets
+from datetime import datetime, timedelta, timezone
 
 import requests
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-import os
 from dotenv import load_dotenv
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
+from app.db.database import db
 from app.db.visitor_crud import save_visitor, get_visitors
-
 
 load_dotenv()
 
 router = APIRouter()
-
-
-# ============================================================
-# EMAILJS CONFIGURATION
-# ============================================================
 
 EMAILJS_SERVICE_ID = os.getenv("EMAILJS_SERVICE_ID")
 EMAILJS_TEMPLATE_ID = os.getenv("EMAILJS_TEMPLATE_ID")
 EMAILJS_PUBLIC_KEY = os.getenv("EMAILJS_PUBLIC_KEY")
 EMAILJS_PRIVATE_KEY = os.getenv("EMAILJS_PRIVATE_KEY")
 
-
-# ============================================================
-# TEMPORARY OTP STORAGE
-# ============================================================
-
 otp_store = {}
+sessions_collection = db["auth_sessions"]
 
 
-# ============================================================
-# REQUEST MODELS
-# ============================================================
-
+# Request Models
 class VisitorRequest(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
     email: str
 
 
 class SendOTPRequest(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
     email: str
 
 
@@ -53,224 +41,209 @@ class VerifyOTPRequest(BaseModel):
     otp: str
 
 
-# ============================================================
-# HELPER - HASH OTP
-# ============================================================
-
-def hash_otp(otp: str) -> str:
-    return hashlib.sha256(otp.encode()).hexdigest()
+# Helper Functions
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
 
 
-# ============================================================
-# SEND OTP
-# ============================================================
+def validate_email(email: str) -> bool:
+    email = normalize_email(email)
+    pattern = r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"
+    return bool(re.fullmatch(pattern, email))
 
-@router.post("/send-otp")
-async def send_otp(request: SendOTPRequest):
 
-    name = request.name.strip()
-    email = request.email.strip().lower()
+def hash_value(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
-    if not name or not email:
-        raise HTTPException(
-            status_code=400,
-            detail="Name and email are required."
-        )
 
-    if not EMAILJS_SERVICE_ID:
+def create_session(email: str, name: str) -> str:
+    token = secrets.token_urlsafe(32)
+    now = datetime.now(timezone.utc)
+
+    sessions_collection.insert_one({
+        "token_hash": hash_value(token),
+        "email": normalize_email(email),
+        "name": name.strip(),
+        "created_at": now,
+        "expires_at": now + timedelta(days=30),
+        "revoked": False,
+    })
+
+    return token
+
+
+def send_emailjs_otp(name: str, email: str, otp: str):
+    if not all([
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        EMAILJS_PUBLIC_KEY,
+    ]):
         raise HTTPException(
             status_code=500,
-            detail="EMAILJS_SERVICE_ID is missing."
+            detail="EmailJS configuration is incomplete. Check backend .env.",
         )
 
-    if not EMAILJS_TEMPLATE_ID:
-        raise HTTPException(
-            status_code=500,
-            detail="EMAILJS_TEMPLATE_ID is missing."
-        )
-
-    if not EMAILJS_PUBLIC_KEY:
-        raise HTTPException(
-            status_code=500,
-            detail="EMAILJS_PUBLIC_KEY is missing."
-        )
-
-    # Generate 6-digit OTP
-    otp = str(random.randint(100000, 999999))
-
-    # OTP expiry = 15 minutes
-    expires_at = datetime.now(ZoneInfo("Asia/Kolkata")) + timedelta(
-        minutes=15
-    )
-
-    # Store hashed OTP
-    otp_store[email] = {
-        "name": name,
-        "otp": hash_otp(otp),
-        "expires_at": expires_at,
-        "attempts": 0,
-    }
-
-    # EmailJS template parameters
-    template_params = {
-        "email": email,
-        "passcode": otp,
-        "time": expires_at.strftime("%d %b %Y %I:%M %p"),
-    }
-
-    emailjs_payload = {
+    payload = {
         "service_id": EMAILJS_SERVICE_ID,
         "template_id": EMAILJS_TEMPLATE_ID,
         "user_id": EMAILJS_PUBLIC_KEY,
-        "accessToken": EMAILJS_PRIVATE_KEY,
-        "template_params": template_params,
+        "template_params": {
+            "name": name,
+            "email": email,
+            "to_name": name,
+            "to_email": email,
+            "otp": otp,
+            "passcode": (otp),
+            "time": "10 minutes",
+        },
     }
+
+    if EMAILJS_PRIVATE_KEY:
+        payload["accessToken"] = EMAILJS_PRIVATE_KEY
 
     try:
         response = requests.post(
             "https://api.emailjs.com/api/v1.0/email/send",
-            json=emailjs_payload,
+            json=payload,
             timeout=15,
         )
-
-        if response.status_code != 200:
-            print("EmailJS Error:", response.text)
-
-            # Remove OTP if email was not sent
-            otp_store.pop(email, None)
-
-            raise HTTPException(
-                status_code=500,
-                detail="Unable to send OTP email. Please try again."
-            )
-
-        print(f"OTP sent successfully to: {email}")
-
-        return {
-            "success": True,
-            "message": "OTP sent successfully."
-        }
-
-    except requests.RequestException as error:
-        print("EmailJS connection error:", error)
-
-        otp_store.pop(email, None)
-
+        response.raise_for_status()
+    except requests.RequestException:
         raise HTTPException(
-            status_code=500,
-            detail="Unable to connect to email service."
+            status_code=502,
+            detail="OTP email failed. Check EmailJS settings and template.",
         )
 
 
-# ============================================================
-# VERIFY OTP
-# ============================================================
+# Send OTP
+@router.post("/send-otp")
+def send_otp(request: SendOTPRequest):
+    name = request.name.strip()
+    email = normalize_email(request.email)
 
-@router.post("/verify-otp")
-async def verify_otp(request: VerifyOTPRequest):
+    if not name:
+        raise HTTPException(status_code=400, detail="Please enter your name.")
 
-    email = request.email.strip().lower()
-    otp = request.otp.strip()
+    if not validate_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email address.")
 
-    if not email or not otp:
-        raise HTTPException(
-            status_code=400,
-            detail="Email and OTP are required."
-        )
+    otp = f"{secrets.randbelow(1000000):06d}"
 
-    if len(otp) != 6 or not otp.isdigit():
-        raise HTTPException(
-            status_code=400,
-            detail="OTP must be 6 digits."
-        )
+    send_emailjs_otp(name, email, otp)
 
-    stored_data = otp_store.get(email)
-
-    if not stored_data:
-        raise HTTPException(
-            status_code=400,
-            detail="OTP not found. Please request a new OTP."
-        )
-
-    # Check expiry
-    current_time = datetime.now(ZoneInfo("Asia/Kolkata"))
-
-    if current_time > stored_data["expires_at"]:
-        otp_store.pop(email, None)
-
-        raise HTTPException(
-            status_code=400,
-            detail="OTP has expired. Please request a new OTP."
-        )
-
-    # Limit wrong attempts
-    if stored_data["attempts"] >= 5:
-        otp_store.pop(email, None)
-
-        raise HTTPException(
-            status_code=400,
-            detail="Too many incorrect attempts. Please request a new OTP."
-        )
-
-    # Compare OTP
-    if hash_otp(otp) != stored_data["otp"]:
-
-        stored_data["attempts"] += 1
-
-        remaining_attempts = 5 - stored_data["attempts"]
-
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Invalid OTP. {remaining_attempts} "
-                f"attempts remaining."
-            )
-        )
-
-    # OTP verified
-    otp_store.pop(email, None)
+    otp_store[email] = {
+        "name": name,
+        "otp_hash": hash_value(otp),
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
+        "attempts": 0,
+    }
 
     return {
         "success": True,
-        "verified": True,
-        "name": stored_data["name"],
-        "email": email,
-        "message": "Email verified successfully."
+        "message": "OTP sent successfully. Check your email.",
     }
 
 
-# ============================================================
-# SAVE VISITOR
-# ============================================================
+# Verify OTP
+@router.post("/verify-otp")
+def verify_otp(request: VerifyOTPRequest):
+    email = normalize_email(request.email)
+    entered_otp = request.otp.strip()
 
-@router.post("/visitor")
-async def create_visitor(visitor: VisitorRequest):
+    if not validate_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email address.")
 
-    name = visitor.name.strip()
-    email = visitor.email.strip().lower()
+    if not re.fullmatch(r"\d{6}", entered_otp):
+        raise HTTPException(status_code=400, detail="Enter the 6-digit OTP.")
 
-    if not name or not email:
+    record = otp_store.get(email)
+
+    if not record:
         raise HTTPException(
             status_code=400,
-            detail="Name and email are required."
+            detail="OTP not found. Request a new OTP.",
         )
 
-    # Save visitor in MongoDB
-    visitor_id = save_visitor(name, email)
+    if datetime.now(timezone.utc) >= record["expires_at"]:
+        otp_store.pop(email, None)
+        raise HTTPException(
+            status_code=400,
+            detail="OTP expired. Request a new OTP.",
+        )
+
+    if record["attempts"] >= 5:
+        otp_store.pop(email, None)
+        raise HTTPException(
+            status_code=429,
+            detail="Too many attempts. Request a new OTP.",
+        )
+
+    if not secrets.compare_digest(
+        hash_value(entered_otp),
+        record["otp_hash"],
+    ):
+        record["attempts"] += 1
+        raise HTTPException(status_code=400, detail="Incorrect OTP.")
+
+    name = record["name"]
+
+    try:
+        access_token = create_session(email, name)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not create login session.",
+        )
+
+    otp_store.pop(email, None)
+
+    try:
+        save_visitor(name, email)
+    except Exception:
+        pass
 
     return {
-        "visitor_id": visitor_id,
-        "message": "Visitor saved successfully."
+        "verified": True,
+        "message": "Email verified successfully.",
+        "name": name,
+        "email": email,
+        "access_token": access_token,
+        "token_type": "bearer",
     }
 
 
-# ============================================================
-# GET ALL VISITORS
-# ============================================================
+# Save Visitor
+@router.post("/visitor")
+def create_visitor(request: VisitorRequest):
+    name = request.name.strip()
+    email = normalize_email(request.email)
 
+    if not name:
+        raise HTTPException(status_code=400, detail="Please enter your name.")
+
+    if not validate_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email address.")
+
+    try:
+        save_visitor(name, email)
+        return {
+            "success": True,
+            "message": "Visitor saved successfully.",
+        }
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not save visitor.",
+        )
+
+
+# Get Visitors
 @router.get("/visitors")
-async def list_visitors():
-
-    return {
-        "visitors": get_visitors()
-    }
+def list_visitors():
+    try:
+        return get_visitors()
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not retrieve visitors.",
+        )

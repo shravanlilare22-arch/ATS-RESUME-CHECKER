@@ -15,6 +15,7 @@ function NameEmailModal({ onSubmit, onClose }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // SEND OTP
   const handleSendOTP = async (e) => {
     e.preventDefault();
 
@@ -29,7 +30,7 @@ function NameEmailModal({ onSubmit, onClose }) {
     setSubmitting(true);
 
     try {
-      await sendOTP(name.trim(), email.trim());
+      await sendOTP(name.trim(), email.trim().toLowerCase());
 
       setOtpSent(true);
       setSuccess("OTP sent successfully to your email.");
@@ -45,31 +46,53 @@ function NameEmailModal({ onSubmit, onClose }) {
     }
   };
 
+  // VERIFY OTP AND SAVE SESSION TOKEN
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
 
     setError("");
     setSuccess("");
 
-    if (!otp.trim()) {
-      setError("Please enter the OTP.");
-      return;
-    }
+    const enteredOTP = otp.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (otp.trim().length !== 6) {
-      setError("OTP must be 6 digits.");
+    if (!/^\d{6}$/.test(enteredOTP)) {
+      setError("Please enter a valid 6-digit OTP.");
       return;
     }
 
     setVerifying(true);
 
     try {
-      await verifyOTP(email.trim(), otp.trim());
+      const verification = await verifyOTP(
+        normalizedEmail,
+        enteredOTP
+      );
+
+      if (
+        !verification?.verified ||
+        !verification?.access_token
+      ) {
+        setError(
+          "Verification failed. Please request a new OTP."
+        );
+        return;
+      }
+
+      // Store the verified session token.
+      // api.js also stores this token; setting it here is intentional.
+      sessionStorage.setItem(
+        "access_token",
+        verification.access_token
+      );
 
       setSuccess("Email verified successfully! 🎉");
 
-      // Save visitor only after OTP verification
-      await onSubmit(name.trim(), email.trim());
+      // Save visitor and continue the existing parent flow.
+      await onSubmit(
+        verification.name || name.trim(),
+        verification.email || normalizedEmail
+      );
     } catch (err) {
       console.error("Verify OTP error:", err);
 
@@ -82,6 +105,7 @@ function NameEmailModal({ onSubmit, onClose }) {
     }
   };
 
+  // BACK TO NAME AND EMAIL FORM
   const handleBack = () => {
     setOtp("");
     setOtpSent(false);
@@ -124,6 +148,8 @@ function NameEmailModal({ onSubmit, onClose }) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={submitting}
+                    maxLength={100}
+                    required
                   />
                 </div>
 
@@ -137,15 +163,14 @@ function NameEmailModal({ onSubmit, onClose }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={submitting}
+                    required
                   />
                 </div>
 
                 {error && <p className="error">{error}</p>}
 
                 {success && (
-                  <p className="success">
-                    {success}
-                  </p>
+                  <p className="success">{success}</p>
                 )}
 
                 <div className="button-row">
@@ -206,15 +231,14 @@ function NameEmailModal({ onSubmit, onClose }) {
                     maxLength={6}
                     autoComplete="one-time-code"
                     disabled={verifying}
+                    required
                   />
                 </div>
 
                 {error && <p className="error">{error}</p>}
 
                 {success && (
-                  <p className="success">
-                    {success}
-                  </p>
+                  <p className="success">{success}</p>
                 )}
 
                 <div className="button-row">

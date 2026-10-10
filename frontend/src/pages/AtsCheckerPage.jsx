@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { analyzeResume, chatAboutResume } from "../services/api";
+import { analyzeResume, chatAboutResume, getUsageStatus } from "../services/api";
 import "../App.css";
 
 // ================= GAUGE =================
@@ -245,6 +245,24 @@ function AtsCheckerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const [usage, setUsage] = useState(null);
+  const [usageLoading, setUsageLoading] = useState(true);
+
+  const loadUsage = async () => {
+    try {
+      const data = await getUsageStatus();
+      setUsage(data);
+    } catch (err) {
+      console.error("Failed to load daily usage:", err);
+      setUsage(null);
+    } finally {
+      setUsageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsage();
+  }, []);
 
   const [chatOpen, setChatOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState(null);
@@ -282,9 +300,24 @@ function AtsCheckerPage() {
         setError(data.error);
       } else {
         setResult(data);
+        if (data.usage) {
+          setUsage(data.usage);
+        } else {
+          await loadUsage();
+        }
       }
     } catch (err) {
-      setError("Something went wrong. Please try again in a moment.");
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      setError(
+        detail ||
+          (status === 401
+            ? "Your session has expired. Please verify your email again."
+            : "Something went wrong. Please try again in a moment.")
+      );
+      if (status === 429 || status === 402) {
+        await loadUsage();
+      }
     } finally {
       setLoading(false);
     }
@@ -374,6 +407,77 @@ function AtsCheckerPage() {
             Upload your resume and tell us your target role.
           </p>
         </motion.header>
+
+        <motion.section
+          className="usage-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          <div className="usage-card-top">
+            <div className="usage-icon" aria-hidden="true">✦</div>
+            <div className="usage-heading">
+              <h3>Daily Free Analyses</h3>
+              <p>Your daily resume analysis allowance</p>
+            </div>
+            <span className="usage-plan-badge">FREE PLAN</span>
+          </div>
+
+          {usageLoading ? (
+            <p className="usage-loading">Loading your daily allowance...</p>
+          ) : usage ? (
+            <>
+              <div className="usage-count-row">
+                <div>
+                  <span className="usage-count">{usage.free_remaining ?? 0}</span>
+                  <span className="usage-total"> of {usage.free_limit ?? 3} remaining</span>
+                </div>
+                <span className="usage-used">{usage.free_used ?? 0} used today</span>
+              </div>
+
+              <div
+                className="usage-progress-track"
+                role="progressbar"
+                aria-label="Daily free analyses used"
+                aria-valuemin={0}
+                aria-valuemax={usage.free_limit ?? 3}
+                aria-valuenow={usage.free_used ?? 0}
+              >
+                <div
+                  className={`usage-progress-fill ${
+                    usage.free_remaining === 0 ? "usage-progress-empty" : ""
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, ((usage.free_used ?? 0) / Math.max(usage.free_limit ?? 3, 1)) * 100))}%`,
+                  }}
+                />
+              </div>
+
+              <div className="usage-steps" aria-hidden="true">
+                {[1, 2, 3].map((step) => (
+                  <span
+                    key={step}
+                    className={step <= (usage.free_used ?? 0) ? "usage-step usage-step-used" : "usage-step"}
+                  />
+                ))}
+              </div>
+
+              <div className={`usage-footer ${usage.free_remaining === 0 ? "usage-footer-warning" : ""}`}>
+                <span>
+                  {usage.free_remaining === 0
+                    ? "Daily limit reached. Come back tomorrow."
+                    : `You have ${usage.free_remaining} free ${usage.free_remaining === 1 ? "analysis" : "analyses"} remaining today.`}
+                </span>
+                <span className="usage-reset">Resets at midnight IST</span>
+              </div>
+            </>
+          ) : (
+            <div className="usage-unavailable">
+              <p>Daily usage is temporarily unavailable.</p>
+              <button type="button" onClick={loadUsage} className="usage-retry-button">Retry</button>
+            </div>
+          )}
+        </motion.section>
 
         <motion.form
           onSubmit={handleSubmit}

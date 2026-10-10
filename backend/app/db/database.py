@@ -1,3 +1,4 @@
+
 import os
 from pathlib import Path
 
@@ -15,6 +16,14 @@ if not MONGO_URI:
 
 # MongoClient turant connect nahi karta, isliye import pe crash nahi hoga
 client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+
 db = client["ats_resume_checker"]
+
+# Existing collections — unchanged
 analyses_collection = db["analyses"]
 visitors_collection = db["visitors"]
+
+# New collections — daily limits and payments
+usage_collection = db["analysis_usage"]
+payments_collection = db["payments"]
+subscriptions_collection = db["subscriptions"]
