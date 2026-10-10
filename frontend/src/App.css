@@ -2625,3 +2625,191 @@ button.secondary:hover {
 .pf-lightbox-home:hover {
   filter: brightness(1.08);
 }
+
+/* =========================================================
+   16. ATS PAGE: BACK BUTTON LEFT CORNER FIX
+   ========================================================= */
+
+.ats-header-topbar {
+  justify-content: space-between; /* Back left, profile right */
+}
+
+.ats-header-topbar .back-link {
+  flex: 0 0 auto;           /* global button { flex:1 } band */
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: auto;
+  padding: 8px 0;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ats-header-topbar .back-link:hover {
+  color: var(--text-primary);
+}
+
+/* =========================================================
+   17. ATS PAGE: BUTTONS TOP PE + HEADING KE LIYE GAP
+   ========================================================= */
+
+.page {
+  padding-top: 14px; /* buttons upar */
+}
+
+@media (min-width: 701px) {
+  .page {
+    padding-top: 24px;
+  }
+}
+
+.ats-header-topbar {
+  align-items: center;
+  margin-bottom: 80px; /* buttons aur heading ke beech gap */
+}
+
+@media (min-width: 701px) {
+  .ats-header-topbar {
+    margin-bottom: 32px;
+  }
+}
+
+/* =========================================================
+   18. ATS PAGE: PROFESSIONAL SCORE GAUGE
+   ========================================================= */
+
+/* chat button (💬) score card ko na dhake */
+.page {
+  padding-bottom: 110px;
+}
+
+.gx-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.gx {
+  position: relative;
+  width: min(300px, 100%);
+  margin: 0 auto;
+}
+
+.gx-svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.gx-end {
+  fill: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+/* number arc ke andar */
+.gx-value {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  transform: translateX(-50%);
+  line-height: 1;
+}
+
+.gx-number {
+  color: var(--text-primary);
+  font-size: clamp(40px, 12vw, 54px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.gx-outof {
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gx-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* "ATS score for ..." */
+.gx-role {
+  margin: 16px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.gx-role b {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.score-block .verdict {
+  max-width: 460px;
+  margin: 10px auto 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 3 stat boxes */
+.gx-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 420px;
+  margin: 22px auto 0;
+}
+
+.gx-stat {
+  padding: 12px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gx-stat b {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.gx-stat b.ok   { color: #4ade80; }
+.gx-stat b.bad  { color: #f87171; }
+.gx-stat b.warn { color: #fbbf24; }
+
+.gx-stat span {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 420px) {
+  .gx-stats {
+    gap: 8px;
+  }
+
+  .gx-stat span {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+}

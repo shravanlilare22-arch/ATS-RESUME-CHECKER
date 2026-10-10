@@ -4,6 +4,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { analyzeResume, chatAboutResume } from "../services/api";
 import "../App.css";
 
+// ================= GAUGE =================
+const GAUGE_R = 80;
+const GAUGE_LEN = Math.PI * GAUGE_R;
+const GAUGE_ARC = "M 20 100 A 80 80 0 0 1 180 100";
+
+function getScoreMeta(score) {
+  if (score >= 70) return { label: "Strong match", color: "#22c55e" };
+  if (score >= 40) return { label: "Moderate match", color: "#f59e0b" };
+  return { label: "Needs work", color: "#ef4444" };
+}
+
 function GaugeScore({ value }) {
   const [display, setDisplay] = useState(0);
 
@@ -27,34 +38,100 @@ function GaugeScore({ value }) {
     return () => clearInterval(timer);
   }, [value]);
 
-  const angle = (display / 100) * 180;
-  const needleAngle = angle - 90;
+  const meta = getScoreMeta(display);
+  const progress = Math.min(Math.max(display, 0), 100) / 100;
+
+  // knob ki position (arc ke end pe)
+  const theta = Math.PI * (1 - progress);
+  const knobX = 100 + GAUGE_R * Math.cos(theta);
+  const knobY = 100 - GAUGE_R * Math.sin(theta);
+
+  // ticks: 0 se 100 tak, har 10 pe
+  const ticks = Array.from({ length: 11 }, (_, i) => {
+    const a = Math.PI * (1 - i / 10);
+    const outer = i % 5 === 0 ? 99 : 96;
+    return {
+      key: i,
+      x1: 100 + 91 * Math.cos(a),
+      y1: 100 - 91 * Math.sin(a),
+      x2: 100 + outer * Math.cos(a),
+      y2: 100 - outer * Math.sin(a),
+      major: i % 5 === 0,
+    };
+  });
 
   return (
-    <div className="gauge-wrapper">
-      <svg viewBox="0 0 200 110" className="gauge-svg">
-        <path d="M 10 100 A 90 90 0 0 1 55 20" stroke="#ef4444" strokeWidth="14" fill="none" strokeLinecap="round" />
-        <path d="M 55 20 A 90 90 0 0 1 100 10" stroke="#f59e0b" strokeWidth="14" fill="none" strokeLinecap="round" />
-        <path d="M 100 10 A 90 90 0 0 1 145 20" stroke="#eab308" strokeWidth="14" fill="none" strokeLinecap="round" />
-        <path d="M 145 20 A 90 90 0 0 1 190 100" stroke="#22c55e" strokeWidth="14" fill="none" strokeLinecap="round" />
-        <motion.line
-          x1="100"
-          y1="100"
-          x2="100"
-          y2="30"
-          stroke="#f1f0fb"
-          strokeWidth="3"
-          strokeLinecap="round"
-          style={{ transformOrigin: "100px 100px" }}
-          animate={{ rotate: needleAngle }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-        />
-        <circle cx="100" cy="100" r="6" fill="#f1f0fb" />
-      </svg>
-      <div className="gauge-value">
-        <span className="gauge-number">{display}</span>
-        <span className="gauge-outof">/100</span>
+    <div className="gx-block">
+      <div className="gx">
+        <svg viewBox="0 0 200 118" className="gx-svg">
+          {ticks.map((t) => (
+            <line
+              key={t.key}
+              x1={t.x1}
+              y1={t.y1}
+              x2={t.x2}
+              y2={t.y2}
+              stroke={t.major ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.15)"}
+              strokeWidth={t.major ? 1.6 : 1}
+              strokeLinecap="round"
+            />
+          ))}
+
+          {/* track */}
+          <path
+            d={GAUGE_ARC}
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth="12"
+            fill="none"
+            strokeLinecap="round"
+          />
+
+          {/* progress */}
+          {progress > 0 && (
+            <path
+              d={GAUGE_ARC}
+              stroke={meta.color}
+              strokeWidth="12"
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={GAUGE_LEN}
+              strokeDashoffset={GAUGE_LEN * (1 - progress)}
+              style={{ filter: `drop-shadow(0 0 6px ${meta.color}80)` }}
+            />
+          )}
+
+          {/* knob */}
+          {progress > 0 && (
+            <circle
+              cx={knobX}
+              cy={knobY}
+              r="7"
+              fill="#f1f0fb"
+              stroke={meta.color}
+              strokeWidth="3"
+            />
+          )}
+
+          <text x="20" y="114" textAnchor="middle" className="gx-end">0</text>
+          <text x="180" y="114" textAnchor="middle" className="gx-end">100</text>
+        </svg>
+
+        <div className="gx-value">
+          <span className="gx-number">{display}</span>
+          <span className="gx-outof">/100</span>
+        </div>
       </div>
+
+      <span
+        className="gx-badge"
+        style={{
+          color: meta.color,
+          background: `${meta.color}1f`,
+          borderColor: `${meta.color}55`,
+        }}
+      >
+        {meta.label}
+      </span>
     </div>
   );
 }
@@ -412,8 +489,27 @@ function AtsCheckerPage() {
                 variants={fadeUp}
               >
                 <GaugeScore value={result.ats_score} />
-                <p className="score-label">ATS Score for {result.target_role}</p>
+
+                <p className="gx-role">
+                  ATS score for <b>{result.target_role}</b>
+                </p>
+
                 <p className="verdict">{result.overall_verdict}</p>
+
+                <div className="gx-stats">
+                  <div className="gx-stat">
+                    <b className="ok">{result.strengths?.length ?? 0}</b>
+                    <span>Strengths</span>
+                  </div>
+                  <div className="gx-stat">
+                    <b className="bad">{result.weaknesses?.length ?? 0}</b>
+                    <span>Weaknesses</span>
+                  </div>
+                  <div className="gx-stat">
+                    <b className="warn">{result.missing_skills?.length ?? 0}</b>
+                    <span>Missing skills</span>
+                  </div>
+                </div>
               </motion.div>
 
               <div className="result-grid">
