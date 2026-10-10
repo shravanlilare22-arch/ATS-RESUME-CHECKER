@@ -1,5 +1,4 @@
 import hashlib
-import os
 from datetime import datetime, timezone
 
 from fastapi import Depends, HTTPException
