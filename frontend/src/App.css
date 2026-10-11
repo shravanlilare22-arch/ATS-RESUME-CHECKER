@@ -2994,3 +2994,19 @@ button.secondary:hover {
     gap: 4px;
   }
 }
+
+/* =========================================================
+   20. LANDING: LOGO BUTTON
+   ========================================================= */
+
+button.lp-brand {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+button.lp-brand:hover {
+  background: rgba(255, 255, 255, 0.07);
+}

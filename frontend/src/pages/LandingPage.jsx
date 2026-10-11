@@ -78,6 +78,7 @@ function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showVisitorModal, setShowVisitorModal] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [logoOpen, setLogoOpen] = useState(false);
 
   // Load saved visitor profile from localStorage
   const [user, setUser] = useState(() => {
@@ -97,6 +98,23 @@ function LandingPage() {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
+  // Logo preview khula ho to: Esc se band + page scroll band
+  useEffect(() => {
+    if (!logoOpen) return;
+
+    const onKey = (e) => {
+      if (e.key === "Escape") setLogoOpen(false);
+    };
+
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [logoOpen]);
 
   // Dropdown ke bahar click karne pe band
   useEffect(() => {
@@ -190,10 +208,16 @@ function LandingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="lp-brand" onClick={() => scrollToSection("home")}>
+        {/* Logo pe click -> bada preview */}
+        <button
+          type="button"
+          className="lp-brand"
+          onClick={() => setLogoOpen(true)}
+          aria-label="View logo"
+        >
           <img src={logo} alt="ATS Resume Checker" />
           <span>ATS Resume Checker</span>
-        </div>
+        </button>
 
         <nav className="lp-links">
           {NAV_LINKS.map((l) => (
@@ -304,10 +328,18 @@ function LandingPage() {
               transition={{ type: "tween", duration: 0.28 }}
             >
               <div className="lp-drawer-head">
-                <div className="lp-brand">
+                <button
+                  type="button"
+                  className="lp-brand"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setLogoOpen(true);
+                  }}
+                  aria-label="View logo"
+                >
                   <img src={logo} alt="ATS Resume Checker" />
                   <span>ATS Resume Checker</span>
-                </div>
+                </button>
                 <button
                   className="lp-burger"
                   style={{ display: "block" }}
@@ -566,6 +598,58 @@ function LandingPage() {
       >
         Built with FastAPI, React, and Google Gemini
       </motion.footer>
+
+      {/* ================= LOGO PREVIEW ================= */}
+      <AnimatePresence>
+        {logoOpen && (
+          <motion.div
+            className="pf-lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setLogoOpen(false)}
+          >
+            <motion.div
+              className="pf-lightbox-box"
+              initial={{ scale: 0.85, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 20 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="pf-lightbox-close"
+                onClick={() => setLogoOpen(false)}
+                aria-label="Close"
+              >
+                <Icon name="close" size={20} />
+              </button>
+
+              <img
+                className="pf-lightbox-img"
+                src={logo}
+                alt="ATS Resume Checker logo"
+              />
+
+              <h3>ATS Resume Checker</h3>
+              <p>Know if your resume passes the ATS before you hit apply.</p>
+
+              <button
+                type="button"
+                className="pf-lightbox-home"
+                onClick={() => {
+                  setLogoOpen(false);
+                  handleCheckResumeClick();
+                }}
+              >
+                Check my resume →
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ================= VISITOR MODAL ================= */}
       {showVisitorModal && (
