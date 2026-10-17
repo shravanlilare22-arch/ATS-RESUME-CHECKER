@@ -38,6 +38,34 @@ def get_india_date_key() -> str:
     return datetime.now(INDIA_TIMEZONE).date().isoformat()
 
 
+def friendly_ai_error(raw_error) -> str:
+    """AI ka technical error user ko seedha nahi dikhate, uska simple version bhejte hain."""
+    text = str(raw_error).lower()
+
+    if "429" in text or "quota" in text or "rate limit" in text or "resource_exhausted" in text:
+        return "Our AI is getting a lot of requests right now. Please try again in a minute."
+
+    if "api_key" in text or "api key" in text or "401" in text or "403" in text or "permission" in text:
+        return "The AI service isn't set up correctly right now. Please try again later."
+
+    if "404" in text or "no longer available" in text or "not found" in text:
+        return "The AI model is temporarily unavailable. Please try again later."
+
+    if "could not be parsed" in text:
+        return "The AI sent back a response we couldn't read. Please try again."
+
+    if (
+        "timeout" in text
+        or "deadline" in text
+        or "503" in text
+        or "overloaded" in text
+        or "unavailable" in text
+    ):
+        return "The AI service is busy right now. Please try again in a moment."
+
+    return "Something went wrong while analyzing your resume. Please try again."
+
+
 # ======================================================
 # GET DAILY FREE USAGE
 # GET /usage
@@ -110,6 +138,12 @@ async def analyze_resume(
         raise HTTPException(
             status_code=400,
             detail="Please enter the target job role.",
+        )
+
+    if len(target_role) < 2 or len(target_role) > 60:
+        raise HTTPException(
+            status_code=400,
+            detail="Target role must be between 2 and 60 characters.",
         )
 
     if not file.filename:
@@ -193,10 +227,20 @@ async def analyze_resume(
                 detail=str(exc),
             ) from exc
 
+        except Exception as exc:
+            print("Resume parse error:", str(exc))
+            raise HTTPException(
+                status_code=400,
+                detail="We couldn't read this file. It may be corrupted or password-protected.",
+            ) from exc
+
         if not resume_text or not resume_text.strip():
             raise HTTPException(
                 status_code=400,
-                detail="No readable text was found in the resume.",
+                detail=(
+                    "No readable text was found in the resume. If it's a scanned "
+                    "or image-based PDF, please upload a text-based PDF or DOCX."
+                ),
             )
 
         # Run the existing AI analyzer.
@@ -212,9 +256,10 @@ async def analyze_resume(
             )
 
         if "error" in result:
+            print("AI analyzer error:", str(result["error"]))
             raise HTTPException(
                 status_code=502,
-                detail=str(result["error"]),
+                detail=friendly_ai_error(result["error"]),
             )
 
         response = {

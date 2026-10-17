@@ -22,13 +22,29 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Session expire ho gaya ho (401) to purana token hata do, taaki baar-baar fail na ho.
+// Error waise hi aage jaata hai, page apna message dikhayega.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      sessionStorage.removeItem("access_token");
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 // RESUME ANALYSIS
+// Render free server so raha ho to pehli request mein zyada time lagta hai, isliye 90 second.
 export const analyzeResume = async (file, targetRole) => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("target_role", targetRole);
 
-  const response = await api.post("/analyze", formData);
+  const response = await api.post("/analyze", formData, {
+    timeout: 90000,
+  });
   return response.data;
 };
 

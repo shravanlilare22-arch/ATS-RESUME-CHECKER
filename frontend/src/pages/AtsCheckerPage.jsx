@@ -2,7 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { analyzeResume, chatAboutResume, getUsageStatus } from "../services/api";
+import {
+  getFriendlyError,
+  isRetryableError,
+  validateResumeFile,
+  validateTargetRole,
+} from "../utils/validation";
 import "../App.css";
+
+// NEW: login/session wali problem (401 ya 403) pehchanne ke liye
+const SESSION_MESSAGE = "Your session has expired. Please verify your email again.";
+const isAuthError = (err) => [401, 403].includes(err?.response?.status);
 
 // ================= GAUGE =================
 const GAUGE_R = 80;
@@ -248,6 +258,11 @@ function AtsCheckerPage() {
   const [usage, setUsage] = useState(null);
   const [usageLoading, setUsageLoading] = useState(true);
 
+  // NEW: slow server hint, Try again button aur session expire ka state
+  const [slowLoading, setSlowLoading] = useState(false);
+  const [retryable, setRetryable] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
   const loadUsage = async () => {
     try {
       const data = await getUsageStatus();
@@ -255,6 +270,12 @@ function AtsCheckerPage() {
     } catch (err) {
       console.error("Failed to load daily usage:", err);
       setUsage(null);
+
+      // NEW: token nahi hai ya expire ho gaya to user ko pehle hi bata do
+      if (isAuthError(err)) {
+        setError(SESSION_MESSAGE);
+        setSessionExpired(true);
+      }
     } finally {
       setUsageLoading(false);
     }
@@ -264,6 +285,17 @@ function AtsCheckerPage() {
     loadUsage();
   }, []);
 
+  // NEW: 8 second se zyada lage to "server jaag raha hai" hint dikhao
+  useEffect(() => {
+    if (!loading) {
+      setSlowLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setSlowLoading(true), 8000);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   const [chatOpen, setChatOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
@@ -271,8 +303,27 @@ function AtsCheckerPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef(null);
 
+  // NEW: validation wali problem dikhane ka chhota helper
+  const showValidationError = (message) => {
+    setError(message);
+    setRetryable(false);
+    setSessionExpired(false);
+  };
+
   const handleFile = (selectedFile) => {
-    if (selectedFile) setFile(selectedFile);
+    if (!selectedFile) return;
+
+    const problem = validateResumeFile(selectedFile);
+    if (problem) {
+      setFile(null);
+      showValidationError(problem);
+      return;
+    }
+
+    setError("");
+    setRetryable(false);
+    setSessionExpired(false);
+    setFile(selectedFile);
   };
 
   const handleDrop = (e) => {
@@ -281,21 +332,18 @@ function AtsCheckerPage() {
     handleFile(e.dataTransfer.files[0]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // NEW: asli analysis alag function me, taaki "Try again" button bhi isko chala sake
+  const runAnalysis = async () => {
     setError("");
-
-    if (!file || !targetRole.trim()) {
-      setError("Please upload a resume and enter your target role.");
-      return;
-    }
-
+    setRetryable(false);
+    setSessionExpired(false);
     setLoading(true);
     setResult(null);
     setChatMessages([]);
     setChatOpen(false);
+
     try {
-      const data = await analyzeResume(file, targetRole);
+      const data = await analyzeResume(file, targetRole.trim());
       if (data.error) {
         setError(data.error);
       } else {
@@ -308,13 +356,20 @@ function AtsCheckerPage() {
       }
     } catch (err) {
       const status = err.response?.status;
-      const detail = err.response?.data?.detail;
-      setError(
-        detail ||
-          (status === 401
-            ? "Your session has expired. Please verify your email again."
-            : "Something went wrong. Please try again in a moment.")
-      );
+
+      if (isAuthError(err)) {
+        setError(SESSION_MESSAGE);
+        setSessionExpired(true);
+      } else {
+        setError(
+          getFriendlyError(
+            err,
+            "Something went wrong while analyzing your resume. Please try again."
+          )
+        );
+        setRetryable(isRetryableError(err));
+      }
+
       if (status === 429 || status === 402) {
         await loadUsage();
       }
@@ -323,11 +378,40 @@ function AtsCheckerPage() {
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (loading) return;
+
+    const fileProblem = validateResumeFile(file);
+    if (fileProblem) {
+      showValidationError(fileProblem);
+      return;
+    }
+
+    const roleProblem = validateTargetRole(targetRole);
+    if (roleProblem) {
+      showValidationError(roleProblem);
+      return;
+    }
+
+    runAnalysis();
+  };
+
+  // NEW: session khatam ho gaya to purana login data hatao aur landing page par bhejo
+  const handleVerifyAgain = () => {
+    localStorage.removeItem("visitorProfile");
+    sessionStorage.removeItem("visitorSubmitted");
+    sessionStorage.removeItem("access_token");
+    navigate("/");
+  };
+
   const handleReset = () => {
     setFile(null);
     setTargetRole("");
     setResult(null);
     setError("");
+    setRetryable(false);
+    setSessionExpired(false);
     setChatMessages([]);
     setChatInput("");
     setChatOpen(false);
@@ -356,7 +440,15 @@ function AtsCheckerPage() {
         setChatMessages([...updatedHistory, { role: "ai", content: "Sorry, I couldn't process that. Please try again." }]);
       }
     } catch (err) {
-      setChatMessages([...updatedHistory, { role: "ai", content: "Something went wrong. Please try again." }]);
+      setChatMessages([
+        ...updatedHistory,
+        {
+          role: "ai",
+          content: isAuthError(err)
+            ? SESSION_MESSAGE
+            : getFriendlyError(err, "Something went wrong. Please try again."),
+        },
+      ]);
     } finally {
       setChatLoading(false);
     }
@@ -501,8 +593,11 @@ function AtsCheckerPage() {
               <input
                 id="fileInput"
                 type="file"
-                accept=".pdf,.docx"
-                onChange={(e) => handleFile(e.target.files[0])}
+                accept=".pdf,.docx,.txt"
+                onChange={(e) => {
+                  handleFile(e.target.files[0]);
+                  e.target.value = "";
+                }}
                 hidden
               />
               <AnimatePresence mode="wait">
@@ -523,7 +618,7 @@ function AtsCheckerPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    Drag & drop your resume, or click to browse (PDF/DOCX)
+                    Drag & drop your resume, or click to browse (PDF, DOCX or TXT, max 10 MB)
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -564,15 +659,42 @@ function AtsCheckerPage() {
           </div>
 
           <AnimatePresence>
-            {error && (
+            {loading && slowLoading && (
               <motion.p
-                className="error"
+                className="slow-hint"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                Still working on it… The server may be waking up after being idle, so the first
+                request can take up to a minute.
+              </motion.p>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                className="error-box"
+                role="alert"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
               >
-                {error}
-              </motion.p>
+                <p className="error">{error}</p>
+
+                {sessionExpired && (
+                  <button type="button" className="retry-btn" onClick={handleVerifyAgain}>
+                    Verify email again
+                  </button>
+                )}
+
+                {retryable && !loading && (
+                  <button type="button" className="retry-btn" onClick={runAnalysis}>
+                    Try again
+                  </button>
+                )}
+              </motion.div>
             )}
           </AnimatePresence>
         </motion.form>

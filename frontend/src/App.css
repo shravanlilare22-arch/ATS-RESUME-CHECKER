@@ -3010,3 +3010,37 @@ button.lp-brand {
 button.lp-brand:hover {
   background: rgba(255, 255, 255, 0.07);
 }
+/* ---------- Error handling polish ---------- */
+
+.error-box {
+  margin-top: 14px;
+}
+
+.error-box .error {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  flex: none;
+  margin-top: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #f1f0fb);
+  background: transparent;
+  border: 1px solid var(--card-border, rgba(139, 122, 255, 0.3));
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.retry-btn:hover {
+  border-color: var(--accent-purple, #8b7aff);
+}
+
+.slow-hint {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #a5a0c9);
+}
