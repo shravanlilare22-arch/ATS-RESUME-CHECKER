@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendOTP, verifyOTP } from "../services/api";
+import { getFriendlyError, validateEmail } from "../utils/validation";
 
 function NameEmailModal({ onSubmit, onClose }) {
   const [name, setName] = useState("");
@@ -12,6 +13,9 @@ function NameEmailModal({ onSubmit, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
+  // NEW: email verify ho chuka ho par aage ka step fail hua ho, to dobara OTP nahi chahiye
+  const [verifiedUser, setVerifiedUser] = useState(null);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -22,8 +26,13 @@ function NameEmailModal({ onSubmit, onClose }) {
     setError("");
     setSuccess("");
 
-    if (!name.trim() || !email.trim()) {
-      setError("Please enter both name and email.");
+    if (!name.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -37,12 +46,27 @@ function NameEmailModal({ onSubmit, onClose }) {
     } catch (err) {
       console.error("Send OTP error:", err);
 
-      setError(
-        err?.response?.data?.detail ||
-          "Unable to send OTP. Please try again."
-      );
+      setError(getFriendlyError(err, "Unable to send OTP. Please try again."));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // NEW: verification ke baad parent ka flow (visitor save + aage badhna) chalao.
+  // Ye khud error pakadta hai, isliye galat "Invalid OTP" message nahi aata.
+  const continueAfterVerification = async (user) => {
+    try {
+      await onSubmit(user.name, user.email);
+    } catch (err) {
+      console.error("Continue after verification error:", err);
+
+      setSuccess("");
+      setError(
+        `Your email is verified, but we couldn't continue. ${getFriendlyError(
+          err,
+          "Please try again."
+        )} Press Continue to try again.`
+      );
     }
   };
 
@@ -53,53 +77,73 @@ function NameEmailModal({ onSubmit, onClose }) {
     setError("");
     setSuccess("");
 
+    // NEW: email pehle hi verify ho chuka hai, sirf aage ka step dobara chalao
+    if (verifiedUser) {
+      setVerifying(true);
+      await continueAfterVerification(verifiedUser);
+      setVerifying(false);
+      return;
+    }
+
     const enteredOTP = otp.trim();
     const normalizedEmail = email.trim().toLowerCase();
 
+    if (!enteredOTP) {
+      setError("Please enter the 6-digit OTP we sent to your email.");
+      return;
+    }
+
     if (!/^\d{6}$/.test(enteredOTP)) {
-      setError("Please enter a valid 6-digit OTP.");
+      setError("The OTP must be exactly 6 digits.");
       return;
     }
 
     setVerifying(true);
 
     try {
-      const verification = await verifyOTP(
-        normalizedEmail,
-        enteredOTP
-      );
+      let user;
 
-      if (
-        !verification?.verified ||
-        !verification?.access_token
-      ) {
+      try {
+        const verification = await verifyOTP(
+          normalizedEmail,
+          enteredOTP
+        );
+
+        if (
+          !verification?.verified ||
+          !verification?.access_token
+        ) {
+          setError(
+            "Verification failed. Please request a new OTP."
+          );
+          return;
+        }
+
+        // Store the verified session token.
+        // api.js also stores this token; setting it here is intentional.
+        sessionStorage.setItem(
+          "access_token",
+          verification.access_token
+        );
+
+        user = {
+          name: verification.name || name.trim(),
+          email: verification.email || normalizedEmail,
+        };
+      } catch (err) {
+        console.error("Verify OTP error:", err);
+
         setError(
-          "Verification failed. Please request a new OTP."
+          getFriendlyError(err, "Invalid or expired OTP. Please try again.")
         );
         return;
       }
 
-      // Store the verified session token.
-      // api.js also stores this token; setting it here is intentional.
-      sessionStorage.setItem(
-        "access_token",
-        verification.access_token
-      );
-
+      setVerifiedUser(user);
       setSuccess("Email verified successfully! 🎉");
 
       // Save visitor and continue the existing parent flow.
-      await onSubmit(
-        verification.name || name.trim(),
-        verification.email || normalizedEmail
-      );
-    } catch (err) {
-      console.error("Verify OTP error:", err);
-
-      setError(
-        err?.response?.data?.detail ||
-          "Invalid or expired OTP. Please try again."
-      );
+      await continueAfterVerification(user);
     } finally {
       setVerifying(false);
     }
@@ -109,6 +153,7 @@ function NameEmailModal({ onSubmit, onClose }) {
   const handleBack = () => {
     setOtp("");
     setOtpSent(false);
+    setVerifiedUser(null);
     setError("");
     setSuccess("");
   };
@@ -137,7 +182,7 @@ function NameEmailModal({ onSubmit, onClose }) {
                 verification code.
               </p>
 
-              <form onSubmit={handleSendOTP}>
+              <form onSubmit={handleSendOTP} noValidate>
                 <div className="form-group">
                   <label>Name</label>
 
@@ -167,7 +212,7 @@ function NameEmailModal({ onSubmit, onClose }) {
                   />
                 </div>
 
-                {error && <p className="error">{error}</p>}
+                {error && <p className="error" role="alert">{error}</p>}
 
                 {success && (
                   <p className="success">{success}</p>
@@ -211,7 +256,7 @@ function NameEmailModal({ onSubmit, onClose }) {
                 {email}
               </p>
 
-              <form onSubmit={handleVerifyOTP}>
+              <form onSubmit={handleVerifyOTP} noValidate>
                 <div className="form-group">
                   <label>Enter OTP</label>
 
@@ -230,12 +275,12 @@ function NameEmailModal({ onSubmit, onClose }) {
                     inputMode="numeric"
                     maxLength={6}
                     autoComplete="one-time-code"
-                    disabled={verifying}
+                    disabled={verifying || Boolean(verifiedUser)}
                     required
                   />
                 </div>
 
-                {error && <p className="error">{error}</p>}
+                {error && <p className="error" role="alert">{error}</p>}
 
                 {success && (
                   <p className="success">{success}</p>
@@ -245,6 +290,8 @@ function NameEmailModal({ onSubmit, onClose }) {
                   <button type="submit" disabled={verifying}>
                     {verifying ? (
                       <span className="spinner"></span>
+                    ) : verifiedUser ? (
+                      "Continue"
                     ) : (
                       "Verify OTP"
                     )}
