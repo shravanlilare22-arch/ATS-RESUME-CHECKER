@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /ats-score
+Disallow: /profile
+
+Sitemap: https://ats-resume-checker-jet.vercel.app/sitemap.xml
