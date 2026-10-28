@@ -29,12 +29,59 @@ const ICONS = {
       <path d="M9.5 9a2.5 2.5 0 015 .5c0 1.5-2.5 2-2.5 3.5M12 17h.01" />
     </>
   ),
+  tips: (
+    <>
+      <path d="M9 18h6M10 21h4" />
+      <path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.3 1 2.1h5c0-.8.4-1.6 1-2.1A6 6 0 0012 3z" />
+    </>
+  ),
   user: (
     <>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
     </>
   ),
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6" />
+      <path d="M16 4.5a3.5 3.5 0 010 7M18 14c2.5.6 4 2.5 4 5" />
+    </>
+  ),
+  trend: <path d="M3 17l6-6 4 4 8-8M15 7h6v6" />,
+  checkc: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.5 2.5L16 9.5" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+      <path d="M8.5 12l2.5 2.5L16 9.5" />
+    </>
+  ),
+  award: (
+    <>
+      <circle cx="12" cy="9" r="6" />
+      <path d="M8.5 14l-1.5 7 5-3 5 3-1.5-7" />
+    </>
+  ),
+  bolt: <path d="M13 2L4 14h7l-1 8 9-12h-7z" />,
+  heart: <path d="M12 21s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 10c0 6-8 11-8 11z" />,
+  doc: (
+    <>
+      <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
+      <path d="M14 3v5h5M9 13h6M9 17h6" />
+    </>
+  ),
+  tick: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   logout: (
     <>
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
@@ -69,7 +116,201 @@ const NAV_LINKS = [
   { label: "Home", icon: "home", target: "home" },
   { label: "Features", icon: "features", target: "features" },
   { label: "How It Works", icon: "how", target: "how-it-works" },
+  { label: "Tips", icon: "tips", target: "tips" },
 ];
+
+// ================= PAGE CONTENT (yahan se text badal sakte ho) =================
+
+// "Built for Job Seekers" ke 4 stats (sab tumhare app ke asli facts)
+const STATS = [
+  { icon: "users", value: "3", title: "Free Analyses Daily", desc: "Check your resume every day at no cost." },
+  { icon: "trend", value: "10 MB", title: "Max File Size", desc: "Upload PDF, DOCX or TXT files up to 10 MB." },
+  { icon: "checkc", value: "AI", title: "Role-Specific Score", desc: "Scored for the exact role you are targeting." },
+  { icon: "clock", value: "1 Report", title: "Score + Fixes", desc: "Strengths, gaps and suggestions in one place." },
+];
+
+const HOW_STEPS = [
+  {
+    art: "upload",
+    title: "1. Upload your resume",
+    desc: "Upload your resume (PDF, DOCX or TXT) to the resume score checker, enter your target role, and view your score.",
+  },
+  {
+    art: "review",
+    title: "2. Review checker report",
+    desc: "Look at your resume review report to see the areas the resume checker recommends fixing.",
+  },
+  {
+    art: "optimize",
+    title: "3. Optimize using our suggestions",
+    desc: "Use the suggestions and the AI chat to make the recommended changes and improve your resume score.",
+  },
+  {
+    art: "download",
+    title: "4. Download and send",
+    desc: "Save your improved resume in your desired format, run the check again, and send it with confidence.",
+  },
+];
+
+const TRUST = [
+  { icon: "shield", title: "Secure Email Verification", desc: "Verify your email with a one-time code before you analyze." },
+  { icon: "award", title: "AI-Powered Accuracy", desc: "Analysis powered by Google Gemini, tailored to the role you choose." },
+  { icon: "bolt", title: "Lightning Fast Analysis", desc: "Upload, pick a role and get your full report in moments." },
+  { icon: "heart", title: "Free to Use", desc: "3 free analyses every day. No credit card required." },
+];
+
+const CHECK_GROUPS = [
+  {
+    icon: "doc",
+    title: "Content",
+    items: [
+      "ATS parse rate",
+      "Repetition of words and phrases",
+      "Spelling and grammar",
+      "Quantifying impact in experience section with examples",
+    ],
+  },
+  { icon: "tips", title: "Skills suggestion", items: ["Hard skills", "Soft skills"] },
+  {
+    letter: "A",
+    title: "Style",
+    items: [
+      "Resume design",
+      "Email address",
+      "Usage of active voice",
+      "Usage of buzzwords and cliches",
+    ],
+  },
+];
+
+const CHECK_EXTRA = ["Resume length", "Long bullet points with suggestions on how to shorten"];
+
+const TIPS = [
+  { title: "Use standard section headings", desc: "Stick to names like Experience, Education and Skills so the ATS can find each section." },
+  { title: "Mirror the job's keywords", desc: "Use the exact skills and tools from the job post, but only the ones you really have." },
+  { title: "Keep the layout simple", desc: "Use one column. Avoid tables, text boxes, icons and images for important details." },
+  { title: "Quantify your impact", desc: "Numbers stand out. Write \"reduced load time by 40%\" instead of \"improved performance\"." },
+  { title: "Start bullets with action verbs", desc: "Use short, active bullet points such as Built, Led or Reduced. Keep each to one or two lines." },
+  { title: "Save it the right way", desc: "Upload a PDF or DOCX with a clear name like FirstName_LastName_Role.pdf." },
+];
+
+const COMPARE = [
+  { label: "ATS Compatibility Check", others: false },
+  { label: "Real-time Analysis", others: false },
+  { label: "Detailed Score Breakdown", others: true },
+  { label: "Job Description Matching", others: false, soon: true },
+  { label: "Keyword Optimization", others: true },
+  { label: "Grammar & Spelling Check", others: true },
+  { label: "Style Recommendations", others: false },
+  { label: "Role-Specific Scoring", others: false },
+  { label: "AI Chat About Your Resume", others: false },
+];
+
+// Asli feedback aaye to yahan jodo, section apne aap dikhne lagega.
+// Format: { name: "Name", role: "Student", text: "Their feedback" }
+const FEEDBACK = [];
+
+// ================= STEP ILLUSTRATIONS =================
+function StepArt({ kind }) {
+  const skin = "#fcd5b5";
+  const shadow = <ellipse cx="130" cy="160" rx="104" ry="6" fill="rgba(255,255,255,0.06)" />;
+
+  if (kind === "upload") {
+    return (
+      <svg viewBox="0 0 260 170" aria-hidden="true">
+        {shadow}
+        <rect x="128" y="48" width="108" height="72" rx="8" fill="#1e1b3a" stroke="#60a5fa" strokeWidth="2" />
+        <rect x="140" y="62" width="60" height="6" rx="3" fill="#8b7aff" />
+        <rect x="140" y="76" width="80" height="6" rx="3" fill="rgba(255,255,255,0.18)" />
+        <rect x="140" y="90" width="48" height="6" rx="3" fill="rgba(255,255,255,0.18)" />
+        <rect x="175" y="120" width="14" height="14" fill="#60a5fa" />
+        <rect x="150" y="134" width="64" height="6" rx="3" fill="#60a5fa" />
+        <circle cx="64" cy="48" r="24" fill="none" stroke="#8b7aff" strokeWidth="3" />
+        <path d="M64 58V38M55 46l9-9 9 9" fill="none" stroke="#f1f0fb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="76" cy="104" r="14" fill={skin} />
+        <path d="M62 102a14 14 0 0128 0c-6-4-20-4-28 0z" fill="#3b2a6b" />
+        <rect x="54" y="120" width="44" height="40" rx="16" fill="#8b7aff" />
+        <path d="M98 132l32-14" stroke="#8b7aff" strokeWidth="9" strokeLinecap="round" />
+        <rect x="206" y="28" width="38" height="22" rx="6" fill="#fb923c" />
+        <path d="M214 38h22M214 44h14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (kind === "review") {
+    return (
+      <svg viewBox="0 0 260 170" aria-hidden="true">
+        {shadow}
+        <rect x="148" y="22" width="88" height="114" rx="8" fill="#1e1b3a" stroke="#60a5fa" strokeWidth="2" />
+        <rect x="160" y="40" width="46" height="6" rx="3" fill="#8b7aff" />
+        <rect x="160" y="56" width="64" height="5" rx="2.5" fill="rgba(255,255,255,0.18)" />
+        <rect x="160" y="68" width="56" height="5" rx="2.5" fill="rgba(255,255,255,0.18)" />
+        <rect x="160" y="80" width="64" height="5" rx="2.5" fill="rgba(255,255,255,0.18)" />
+        <rect x="160" y="96" width="40" height="5" rx="2.5" fill="rgba(255,255,255,0.18)" />
+        <circle cx="222" cy="30" r="14" fill="#4ade80" />
+        <path d="M215 30l5 5 9-10" fill="none" stroke="#0d0b1f" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="84" cy="80" r="15" fill={skin} />
+        <path d="M69 78a15 15 0 0130 0c-8-5-22-5-30 0z" fill="#ef6a3c" />
+        <rect x="62" y="98" width="44" height="62" rx="16" fill="#60a5fa" />
+        <path d="M104 118c14-4 22-12 26-24" fill="none" stroke="#60a5fa" strokeWidth="9" strokeLinecap="round" />
+        <path d="M30 40l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#fb923c" />
+      </svg>
+    );
+  }
+
+  if (kind === "optimize") {
+    return (
+      <svg viewBox="0 0 260 170" aria-hidden="true">
+        {shadow}
+        <rect x="26" y="24" width="88" height="52" rx="8" fill="#1e1b3a" stroke="#8b7aff" strokeWidth="2" />
+        <rect x="38" y="38" width="44" height="6" rx="3" fill="#8b7aff" />
+        <rect x="38" y="52" width="64" height="5" rx="2.5" fill="rgba(255,255,255,0.18)" />
+        <rect x="130" y="80" width="106" height="60" rx="8" fill="#1e1b3a" stroke="#60a5fa" strokeWidth="2" />
+        <rect x="142" y="94" width="50" height="6" rx="3" fill="#4ade80" />
+        <rect x="142" y="108" width="80" height="5" rx="2.5" fill="rgba(255,255,255,0.18)" />
+        <rect x="142" y="120" width="60" height="5" rx="2.5" fill="rgba(255,255,255,0.18)" />
+        <rect x="118" y="140" width="130" height="8" rx="4" fill="#60a5fa" />
+        <circle cx="72" cy="104" r="14" fill={skin} />
+        <path d="M58 102a14 14 0 0128 0c-6-4-20-4-28 0z" fill="#1f2a44" />
+        <rect x="50" y="120" width="44" height="40" rx="16" fill="#fb923c" />
+        <path d="M92 130l30-34" fill="none" stroke="#fb923c" strokeWidth="9" strokeLinecap="round" />
+        <path d="M196 44q10-12 20 0t20 0" fill="none" stroke="#fb923c" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 260 170" aria-hidden="true">
+      {shadow}
+      <rect x="140" y="66" width="96" height="62" rx="8" fill="#1e1b3a" stroke="#60a5fa" strokeWidth="2" />
+      <path d="M188 80v22M178 94l10 10 10-10" fill="none" stroke="#f1f0fb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="181" y="128" width="14" height="12" fill="#60a5fa" />
+      <rect x="158" y="140" width="60" height="6" rx="3" fill="#60a5fa" />
+      <rect x="176" y="20" width="46" height="16" rx="3" fill="#ef4444" />
+      <text x="199" y="32" textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff" fontFamily="Inter, sans-serif">PDF</text>
+      <rect x="196" y="40" width="46" height="16" rx="3" fill="#2563eb" />
+      <text x="219" y="52" textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff" fontFamily="Inter, sans-serif">WORD</text>
+      <rect x="150" y="40" width="40" height="16" rx="3" fill="#fb923c" />
+      <text x="170" y="52" textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff" fontFamily="Inter, sans-serif">TXT</text>
+      <circle cx="70" cy="96" r="14" fill={skin} />
+      <path d="M56 94a14 14 0 0128 0c-6-4-20-4-28 0z" fill="#3b2a6b" />
+      <path d="M56 100c-12-10-6-26 6-26M84 100c12-10 6-26-6-26" fill="none" stroke={skin} strokeWidth="7" strokeLinecap="round" />
+      <rect x="48" y="112" width="44" height="48" rx="16" fill="#34d399" />
+    </svg>
+  );
+}
+
+function Mark({ ok }) {
+  return (
+    <span
+      className={`lp-mark ${ok ? "yes" : "no"}`}
+      role="img"
+      aria-label={ok ? "Yes" : "No"}
+    >
+      <Icon name={ok ? "tick" : "close"} size={14} />
+    </span>
+  );
+}
 
 function LandingPage() {
   const navigate = useNavigate();
@@ -550,42 +791,260 @@ function LandingPage() {
         ))}
       </section>
 
-      {/* ================= HOW IT WORKS ================= */}
-      <section className="how-it-works" id="how-it-works">
-        <h2>How It Works</h2>
+      {/* ================= BUILT FOR JOB SEEKERS (stats) ================= */}
+      <section className="lp-sec">
+        <motion.div
+          className="lp-panel"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="lp-sec-h">Built for Job Seekers</h2>
+          <p className="lp-sec-sub">
+            Our ATS checker helps you improve your resume with an AI-powered,
+            role-specific analysis.
+          </p>
 
-        <div className="steps-row">
-          {[
-            {
-              num: "1",
-              title: "Upload Resume",
-              desc: "Upload your resume in PDF or DOCX format.",
-            },
-            {
-              num: "2",
-              title: "Enter Target Role",
-              desc: "Tell us the job role you're applying for.",
-            },
-            {
-              num: "3",
-              title: "Get AI Analysis",
-              desc: "Receive your ATS score, strengths, weaknesses, and suggestions instantly.",
-            },
-          ].map((step, i) => (
+          <div className="lp-stats">
+            {STATS.map((s) => (
+              <div className="lp-stat" key={s.title}>
+                <span className="lp-round">
+                  <Icon name={s.icon} size={24} />
+                </span>
+                <b>{s.value}</b>
+                <strong>{s.title}</strong>
+                <p>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ================= HOW OUR FREE RESUME SCANNER WORKS ================= */}
+      <section className="lp-sec" id="how-it-works">
+        <h2 className="lp-sec-h">How our free resume scanner works</h2>
+        <p className="lp-sec-sub">
+          Our resume ATS checker will automatically scan your resume's
+          structure, grammar, spelling, and wording to provide actionable steps
+          for improvement.
+        </p>
+
+        <div className="lp-how-grid">
+          {HOW_STEPS.map((step, i) => (
             <motion.div
-              key={step.num}
-              className="step-card"
+              className="lp-how-item"
+              key={step.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ delay: i * 0.15, duration: 0.5 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ delay: (i % 2) * 0.12, duration: 0.5 }}
             >
-              <div className="step-num">{step.num}</div>
-              <h3>{step.title}</h3>
-              <p>{step.desc}</p>
+              <div className="lp-how-art">
+                <StepArt kind={step.art} />
+              </div>
+              <div className="lp-how-card">
+                <h3>{step.title}</h3>
+                <p>{step.desc}</p>
+              </div>
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* ================= WHY PROFESSIONALS TRUST US ================= */}
+      <section className="lp-sec">
+        <motion.div
+          className="lp-panel"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="lp-sec-h">Why Professionals Trust Us</h2>
+          <p className="lp-sec-sub">
+            We're committed to providing the most reliable, secure, and
+            effective resume analysis tool available.
+          </p>
+
+          <div className="lp-trust">
+            {TRUST.map((t) => (
+              <div className="lp-trust-item" key={t.title}>
+                <span className="lp-round soft">
+                  <Icon name={t.icon} size={24} />
+                </span>
+                <strong>{t.title}</strong>
+                <p>{t.desc}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ================= LIST OF THE CHECKS ================= */}
+      <section className="lp-sec">
+        <motion.div
+          className="lp-checks"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="lp-sec-h">List of the checks you'll receive:</h2>
+
+          <div className="lp-check-grid">
+            {CHECK_GROUPS.map((g) => (
+              <div className="lp-check-card" key={g.title}>
+                <div className="lp-check-head">
+                  <span className="lp-round sm">
+                    {g.letter ? g.letter : <Icon name={g.icon} size={20} />}
+                  </span>
+                  <h3>{g.title}</h3>
+                </div>
+                <ul>
+                  {g.items.map((item) => (
+                    <li key={item}>
+                      <Icon name="checkc" size={16} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="lp-check-extra">
+            {CHECK_EXTRA.map((item) => (
+              <div className="lp-check-card" key={item}>
+                <ul>
+                  <li>
+                    <Icon name="checkc" size={18} />
+                    <strong>{item}</strong>
+                  </li>
+                </ul>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ================= TIPS ================= */}
+      <section className="lp-sec" id="tips">
+        <h2 className="lp-sec-h">Resume tips that help you pass the ATS</h2>
+        <p className="lp-sec-sub">
+          Small changes make a big difference. Follow these before you upload
+          your resume.
+        </p>
+
+        <div className="lp-tips">
+          {TIPS.map((tip, i) => (
+            <motion.div
+              className="lp-tip"
+              key={tip.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: (i % 3) * 0.1, duration: 0.45 }}
+              whileHover={{ y: -4 }}
+            >
+              <span className="lp-tip-num">{i + 1}</span>
+              <h3>{tip.title}</h3>
+              <p>{tip.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ================= WHY CHOOSE OUR ATS CHECKER ================= */}
+      <section className="lp-sec lp-sec-narrow">
+        <h2 className="lp-sec-h">Why Choose Our ATS Checker?</h2>
+        <p className="lp-sec-sub">
+          Compare our comprehensive tool with other resume checkers in the
+          market.
+        </p>
+
+        <div className="lp-table-wrap">
+          <table className="lp-table">
+            <thead>
+              <tr>
+                <th scope="col">Features</th>
+                <th scope="col" className="lp-ours">Our ATS Checker</th>
+                <th scope="col">Other Tools</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARE.map((row) => (
+                <tr key={row.label}>
+                  <td>
+                    {row.label}
+                    {row.soon && <span className="lp-soon">Soon</span>}
+                  </td>
+                  <td className="lp-ours">
+                    <Mark ok />
+                  </td>
+                  <td>
+                    <Mark ok={row.others} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="lp-table-note">
+          Get 3 free analyses every day - no hidden costs, no subscriptions!
+        </p>
+        <button className="lp-btn2" onClick={handleCheckResumeClick}>
+          Try It Now
+        </button>
+      </section>
+
+      {/* ================= WHAT OUR USERS SAY (sirf tab dikhega jab FEEDBACK me data ho) ================= */}
+      {FEEDBACK.length > 0 && (
+        <section className="lp-sec">
+          <h2 className="lp-sec-h">What our users say</h2>
+          <p className="lp-sec-sub">Real feedback from people who tried the checker.</p>
+
+          <div className="lp-feedback">
+            {FEEDBACK.map((f) => (
+              <div className="lp-fb" key={f.name}>
+                <p>"{f.text}"</p>
+                <div className="lp-fb-who">
+                  <span className="lp-avatar">{f.name.charAt(0).toUpperCase()}</span>
+                  <div>
+                    <strong>{f.name}</strong>
+                    <small>{f.role}</small>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ================= READY TO LAND YOUR DREAM JOB ================= */}
+      <section className="lp-sec">
+        <motion.div
+          className="lp-cta2"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2>Ready to Land Your Dream Job?</h2>
+          <p>
+            Check your resume against the role you want and get clear fixes
+            before you apply.
+          </p>
+          <button className="lp-cta2-btn" onClick={handleCheckResumeClick}>
+            Start Free Analysis Now →
+          </button>
+          <div className="lp-cta2-points">
+            <span>3 free analyses every day</span>
+            <span>Role-specific report</span>
+            <span>AI follow-up chat</span>
+          </div>
+        </motion.div>
       </section>
 
       {/* ================= FOOTER ================= */}
