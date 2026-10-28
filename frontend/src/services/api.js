@@ -1,16 +1,18 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://ats-resume-checker-kto8.onrender.com"; //http://localhost:8000   https://ats-resume-checker-kto8.onrender.com
+const API_BASE_URL = "https://ats-resume-checker-kto8.onrender.com";
+
+const TOKEN_KEY = "access_token";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000,
 });
 
-// Attach verified session token to protected requests.
+// Attach saved session token to protected requests.
 api.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem("access_token");
+    const token = localStorage.getItem(TOKEN_KEY);
 
     if (token) {
       config.headers = config.headers || {};
@@ -22,13 +24,12 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Session expire ho gaya ho (401) to purana token hata do, taaki baar-baar fail na ho.
-// Error waise hi aage jaata hai, page apna message dikhayega.
+// Clear token only when the backend says the session is invalid.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      sessionStorage.removeItem("access_token");
+      localStorage.removeItem(TOKEN_KEY);
     }
 
     return Promise.reject(error);
@@ -36,7 +37,6 @@ api.interceptors.response.use(
 );
 
 // RESUME ANALYSIS
-// Render free server so raha ho to pehli request mein zyada time lagta hai, isliye 90 second.
 export const analyzeResume = async (file, targetRole) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -45,6 +45,7 @@ export const analyzeResume = async (file, targetRole) => {
   const response = await api.post("/analyze", formData, {
     timeout: 90000,
   });
+
   return response.data;
 };
 
@@ -83,10 +84,7 @@ export const verifyOTP = async (email, otp) => {
   });
 
   if (response.data?.access_token) {
-    sessionStorage.setItem(
-      "access_token",
-      response.data.access_token
-    );
+    localStorage.setItem(TOKEN_KEY, response.data.access_token);
   }
 
   return response.data;
@@ -103,15 +101,14 @@ export const saveVisitor = async (name, email) => {
 };
 
 // GET DAILY FREE USAGE STATUS
-// Backend endpoint must be implemented as GET /usage.
 export const getUsageStatus = async () => {
   const response = await api.get("/usage");
   return response.data;
 };
 
-// LOGOUT
+// LOGOUT: call only when the user explicitly logs out.
 export const logout = () => {
-  sessionStorage.removeItem("access_token");
+  localStorage.removeItem(TOKEN_KEY);
 };
 
 export default api;
