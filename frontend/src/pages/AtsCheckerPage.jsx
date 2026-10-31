@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { analyzeResume, chatAboutResume, getUsageStatus } from "../services/api";
+import { getProfilePhoto } from "../services/profileStore";
 import {
   getFriendlyError,
   isRetryableError,
@@ -10,8 +11,12 @@ import {
 } from "../utils/validation";
 import "../App.css";
 
-// NEW: login/session wali problem (401 ya 403) pehchanne ke liye
-const SESSION_MESSAGE = "Your session has expired. Please verify your email again.";
+// ================= CONSTANTS =================
+const SESSION_MESSAGE =
+  "Your session has expired. Please verify your email again.";
+
+const DEFAULT_TARGET_ROLE = "web developer";
+
 const isAuthError = (err) => [401, 403].includes(err?.response?.status);
 
 // ================= GAUGE =================
@@ -37,6 +42,7 @@ function GaugeScore({ value }) {
 
     const timer = setInterval(() => {
       start += increment;
+
       if (start >= value) {
         setDisplay(value);
         clearInterval(timer);
@@ -51,15 +57,14 @@ function GaugeScore({ value }) {
   const meta = getScoreMeta(display);
   const progress = Math.min(Math.max(display, 0), 100) / 100;
 
-  // knob ki position (arc ke end pe)
   const theta = Math.PI * (1 - progress);
   const knobX = 100 + GAUGE_R * Math.cos(theta);
   const knobY = 100 - GAUGE_R * Math.sin(theta);
 
-  // ticks: 0 se 100 tak, har 10 pe
   const ticks = Array.from({ length: 11 }, (_, i) => {
     const a = Math.PI * (1 - i / 10);
     const outer = i % 5 === 0 ? 99 : 96;
+
     return {
       key: i,
       x1: 100 + 91 * Math.cos(a),
@@ -81,13 +86,16 @@ function GaugeScore({ value }) {
               y1={t.y1}
               x2={t.x2}
               y2={t.y2}
-              stroke={t.major ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.15)"}
+              stroke={
+                t.major
+                  ? "rgba(255,255,255,0.35)"
+                  : "rgba(255,255,255,0.15)"
+              }
               strokeWidth={t.major ? 1.6 : 1}
               strokeLinecap="round"
             />
           ))}
 
-          {/* track */}
           <path
             d={GAUGE_ARC}
             stroke="rgba(255,255,255,0.08)"
@@ -96,7 +104,6 @@ function GaugeScore({ value }) {
             strokeLinecap="round"
           />
 
-          {/* progress */}
           {progress > 0 && (
             <path
               d={GAUGE_ARC}
@@ -106,11 +113,12 @@ function GaugeScore({ value }) {
               strokeLinecap="round"
               strokeDasharray={GAUGE_LEN}
               strokeDashoffset={GAUGE_LEN * (1 - progress)}
-              style={{ filter: `drop-shadow(0 0 6px ${meta.color}80)` }}
+              style={{
+                filter: `drop-shadow(0 0 6px ${meta.color}80)`,
+              }}
             />
           )}
 
-          {/* knob */}
           {progress > 0 && (
             <circle
               cx={knobX}
@@ -122,8 +130,12 @@ function GaugeScore({ value }) {
             />
           )}
 
-          <text x="20" y="114" textAnchor="middle" className="gx-end">0</text>
-          <text x="180" y="114" textAnchor="middle" className="gx-end">100</text>
+          <text x="20" y="114" textAnchor="middle" className="gx-end">
+            0
+          </text>
+          <text x="180" y="114" textAnchor="middle" className="gx-end">
+            100
+          </text>
         </svg>
 
         <div className="gx-value">
@@ -146,7 +158,7 @@ function GaugeScore({ value }) {
   );
 }
 
-
+// ================= PROFILE MENU =================
 function ProfileMenu() {
   const navigate = useNavigate();
 
@@ -162,11 +174,44 @@ function ProfileMenu() {
     }
   });
 
+  // Load saved profile photo
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    try {
+      const savedProfile = localStorage.getItem("visitorProfile");
+      const parsedProfile = savedProfile ? JSON.parse(savedProfile) : null;
+
+      return parsedProfile?.email
+        ? getProfilePhoto(parsedProfile.email)
+        : null;
+    } catch (error) {
+      console.error("Failed to load profile photo:", error);
+      return null;
+    }
+  });
+
+  // Refresh photo whenever the user profile changes
+  useEffect(() => {
+    if (!user?.email) {
+      setProfilePhoto(null);
+      return;
+    }
+
+    try {
+      setProfilePhoto(getProfilePhoto(user.email));
+    } catch (error) {
+      console.error("Failed to refresh profile photo:", error);
+      setProfilePhoto(null);
+    }
+  }, [user?.email]);
+
   const handleLogout = () => {
     localStorage.removeItem("visitorProfile");
     sessionStorage.removeItem("visitorSubmitted");
+
     setUser(null);
+    setProfilePhoto(null);
     setProfileOpen(false);
+
     navigate("/");
   };
 
@@ -190,11 +235,25 @@ function ProfileMenu() {
         onClick={() => setProfileOpen((prev) => !prev)}
       >
         <span className="ats-profile-avatar-small">
-          {user.name?.charAt(0).toUpperCase() || "U"}
+          {profilePhoto ? (
+            <img
+              src={profilePhoto}
+              alt="Profile"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: "50%",
+                display: "block",
+              }}
+            />
+          ) : (
+            user.name?.charAt(0).toUpperCase() || "U"
+          )}
         </span>
-        <span className="ats-profile-name">
-          {user.name}
-        </span>
+
+        <span className="ats-profile-name">{user.name}</span>
+
         <span className="ats-profile-arrow">
           {profileOpen ? "▲" : "▼"}
         </span>
@@ -211,7 +270,21 @@ function ProfileMenu() {
           >
             <div className="ats-profile-dropdown-header">
               <div className="ats-profile-avatar-large">
-                {user.name?.charAt(0).toUpperCase() || "U"}
+                {profilePhoto ? (
+                  <img
+                    src={profilePhoto}
+                    alt="Profile"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "50%",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  user.name?.charAt(0).toUpperCase() || "U"
+                )}
               </div>
 
               <div className="ats-profile-user-info">
@@ -247,10 +320,15 @@ function ProfileMenu() {
   );
 }
 
+// ================= MAIN ATS PAGE =================
 function AtsCheckerPage() {
   const navigate = useNavigate();
+
   const [file, setFile] = useState(null);
-  const [targetRole, setTargetRole] = useState("");
+
+  // Default target role
+  const [targetRole, setTargetRole] = useState(DEFAULT_TARGET_ROLE);
+
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -258,7 +336,6 @@ function AtsCheckerPage() {
   const [usage, setUsage] = useState(null);
   const [usageLoading, setUsageLoading] = useState(true);
 
-  // NEW: slow server hint, Try again button aur session expire ka state
   const [slowLoading, setSlowLoading] = useState(false);
   const [retryable, setRetryable] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -271,7 +348,6 @@ function AtsCheckerPage() {
       console.error("Failed to load daily usage:", err);
       setUsage(null);
 
-      // NEW: token nahi hai ya expire ho gaya to user ko pehle hi bata do
       if (isAuthError(err)) {
         setError(SESSION_MESSAGE);
         setSessionExpired(true);
@@ -285,7 +361,7 @@ function AtsCheckerPage() {
     loadUsage();
   }, []);
 
-  // NEW: 8 second se zyada lage to "server jaag raha hai" hint dikhao
+  // Show server hint after 8 seconds
   useEffect(() => {
     if (!loading) {
       setSlowLoading(false);
@@ -293,6 +369,7 @@ function AtsCheckerPage() {
     }
 
     const timer = setTimeout(() => setSlowLoading(true), 8000);
+
     return () => clearTimeout(timer);
   }, [loading]);
 
@@ -301,9 +378,9 @@ function AtsCheckerPage() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+
   const chatEndRef = useRef(null);
 
-  // NEW: validation wali problem dikhane ka chhota helper
   const showValidationError = (message) => {
     setError(message);
     setRetryable(false);
@@ -314,6 +391,7 @@ function AtsCheckerPage() {
     if (!selectedFile) return;
 
     const problem = validateResumeFile(selectedFile);
+
     if (problem) {
       setFile(null);
       showValidationError(problem);
@@ -332,7 +410,7 @@ function AtsCheckerPage() {
     handleFile(e.dataTransfer.files[0]);
   };
 
-  // NEW: asli analysis alag function me, taaki "Try again" button bhi isko chala sake
+  // Resume analysis
   const runAnalysis = async () => {
     setError("");
     setRetryable(false);
@@ -344,10 +422,12 @@ function AtsCheckerPage() {
 
     try {
       const data = await analyzeResume(file, targetRole.trim());
+
       if (data.error) {
         setError(data.error);
       } else {
         setResult(data);
+
         if (data.usage) {
           setUsage(data.usage);
         } else {
@@ -367,6 +447,7 @@ function AtsCheckerPage() {
             "Something went wrong while analyzing your resume. Please try again."
           )
         );
+
         setRetryable(isRetryableError(err));
       }
 
@@ -380,15 +461,18 @@ function AtsCheckerPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (loading) return;
 
     const fileProblem = validateResumeFile(file);
+
     if (fileProblem) {
       showValidationError(fileProblem);
       return;
     }
 
     const roleProblem = validateTargetRole(targetRole);
+
     if (roleProblem) {
       showValidationError(roleProblem);
       return;
@@ -397,17 +481,19 @@ function AtsCheckerPage() {
     runAnalysis();
   };
 
-  // NEW: session khatam ho gaya to purana login data hatao aur landing page par bhejo
+  // Verify email again
   const handleVerifyAgain = () => {
     localStorage.removeItem("visitorProfile");
     sessionStorage.removeItem("visitorSubmitted");
     sessionStorage.removeItem("access_token");
+
     navigate("/");
   };
 
+  // Reset form but keep default target role
   const handleReset = () => {
     setFile(null);
-    setTargetRole("");
+    setTargetRole(DEFAULT_TARGET_ROLE);
     setResult(null);
     setError("");
     setRetryable(false);
@@ -417,12 +503,19 @@ function AtsCheckerPage() {
     setChatOpen(false);
   };
 
+  // AI chat
   const handleChatSend = async (e) => {
     e.preventDefault();
+
     if (!chatInput.trim() || chatLoading) return;
 
     const userMessage = chatInput.trim();
-    const updatedHistory = [...chatMessages, { role: "user", content: userMessage }];
+
+    const updatedHistory = [
+      ...chatMessages,
+      { role: "user", content: userMessage },
+    ];
+
     setChatMessages(updatedHistory);
     setChatInput("");
     setChatLoading(true);
@@ -434,10 +527,20 @@ function AtsCheckerPage() {
         chatMessages,
         userMessage
       );
+
       if (data.reply) {
-        setChatMessages([...updatedHistory, { role: "ai", content: data.reply }]);
+        setChatMessages([
+          ...updatedHistory,
+          { role: "ai", content: data.reply },
+        ]);
       } else {
-        setChatMessages([...updatedHistory, { role: "ai", content: "Sorry, I couldn't process that. Please try again." }]);
+        setChatMessages([
+          ...updatedHistory,
+          {
+            role: "ai",
+            content: "Sorry, I couldn't process that. Please try again.",
+          },
+        ]);
       }
     } catch (err) {
       setChatMessages([
@@ -446,7 +549,10 @@ function AtsCheckerPage() {
           role: "ai",
           content: isAuthError(err)
             ? SESSION_MESSAGE
-            : getFriendlyError(err, "Something went wrong. Please try again."),
+            : getFriendlyError(
+                err,
+                "Something went wrong. Please try again."
+              ),
         },
       ]);
     } finally {
@@ -458,18 +564,16 @@ function AtsCheckerPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, chatLoading]);
 
-  const getScoreColor = (score) => {
-    if (score >= 70) return "score-high";
-    if (score >= 40) return "score-mid";
-    return "score-low";
-  };
-
   const fadeUp = {
     hidden: { opacity: 0, y: 20 },
     visible: (i = 0) => ({
       opacity: 1,
       y: 0,
-      transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" },
+      transition: {
+        delay: i * 0.08,
+        duration: 0.5,
+        ease: "easeOut",
+      },
     }),
   };
 
@@ -500,6 +604,7 @@ function AtsCheckerPage() {
           </p>
         </motion.header>
 
+        {/* DAILY USAGE */}
         <motion.section
           className="usage-card"
           initial={{ opacity: 0, y: 12 }}
@@ -507,24 +612,38 @@ function AtsCheckerPage() {
           transition={{ duration: 0.35 }}
         >
           <div className="usage-card-top">
-            <div className="usage-icon" aria-hidden="true">✦</div>
+            <div className="usage-icon" aria-hidden="true">
+              ✦
+            </div>
+
             <div className="usage-heading">
               <h3>Daily Free Analyses</h3>
               <p>Your daily resume analysis allowance</p>
             </div>
+
             <span className="usage-plan-badge">FREE PLAN</span>
           </div>
 
           {usageLoading ? (
-            <p className="usage-loading">Loading your daily allowance...</p>
+            <p className="usage-loading">
+              Loading your daily allowance...
+            </p>
           ) : usage ? (
             <>
               <div className="usage-count-row">
                 <div>
-                  <span className="usage-count">{usage.free_remaining ?? 0}</span>
-                  <span className="usage-total"> of {usage.free_limit ?? 3} remaining</span>
+                  <span className="usage-count">
+                    {usage.free_remaining ?? 0}
+                  </span>
+
+                  <span className="usage-total">
+                    {" "}of {usage.free_limit ?? 3} remaining
+                  </span>
                 </div>
-                <span className="usage-used">{usage.free_used ?? 0} used today</span>
+
+                <span className="usage-used">
+                  {usage.free_used ?? 0} used today
+                </span>
               </div>
 
               <div
@@ -537,10 +656,20 @@ function AtsCheckerPage() {
               >
                 <div
                   className={`usage-progress-fill ${
-                    usage.free_remaining === 0 ? "usage-progress-empty" : ""
+                    usage.free_remaining === 0
+                      ? "usage-progress-empty"
+                      : ""
                   }`}
                   style={{
-                    width: `${Math.min(100, Math.max(0, ((usage.free_used ?? 0) / Math.max(usage.free_limit ?? 3, 1)) * 100))}%`,
+                    width: `${Math.min(
+                      100,
+                      Math.max(
+                        0,
+                        ((usage.free_used ?? 0) /
+                          Math.max(usage.free_limit ?? 3, 1)) *
+                          100
+                      )
+                    )}%`,
                   }}
                 />
               </div>
@@ -549,28 +678,53 @@ function AtsCheckerPage() {
                 {[1, 2, 3].map((step) => (
                   <span
                     key={step}
-                    className={step <= (usage.free_used ?? 0) ? "usage-step usage-step-used" : "usage-step"}
+                    className={
+                      step <= (usage.free_used ?? 0)
+                        ? "usage-step usage-step-used"
+                        : "usage-step"
+                    }
                   />
                 ))}
               </div>
 
-              <div className={`usage-footer ${usage.free_remaining === 0 ? "usage-footer-warning" : ""}`}>
+              <div
+                className={`usage-footer ${
+                  usage.free_remaining === 0
+                    ? "usage-footer-warning"
+                    : ""
+                }`}
+              >
                 <span>
                   {usage.free_remaining === 0
                     ? "Daily limit reached. Come back tomorrow."
-                    : `You have ${usage.free_remaining} free ${usage.free_remaining === 1 ? "analysis" : "analyses"} remaining today.`}
+                    : `You have ${usage.free_remaining} free ${
+                        usage.free_remaining === 1
+                          ? "analysis"
+                          : "analyses"
+                      } remaining today.`}
                 </span>
-                <span className="usage-reset">Resets at midnight IST</span>
+
+                <span className="usage-reset">
+                  Resets at midnight IST
+                </span>
               </div>
             </>
           ) : (
             <div className="usage-unavailable">
               <p>Daily usage is temporarily unavailable.</p>
-              <button type="button" onClick={loadUsage} className="usage-retry-button">Retry</button>
+
+              <button
+                type="button"
+                onClick={loadUsage}
+                className="usage-retry-button"
+              >
+                Retry
+              </button>
             </div>
           )}
         </motion.section>
 
+        {/* RESUME FORM */}
         <motion.form
           onSubmit={handleSubmit}
           className="card"
@@ -580,15 +734,27 @@ function AtsCheckerPage() {
         >
           <div className="form-group">
             <label>Resume</label>
+
             <motion.div
-              className={`dropzone ${dragActive ? "active" : ""} ${file ? "has-file" : ""}`}
-              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+              className={`dropzone ${
+                dragActive ? "active" : ""
+              } ${file ? "has-file" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragActive(true);
+              }}
               onDragLeave={() => setDragActive(false)}
               onDrop={handleDrop}
-              onClick={() => document.getElementById("fileInput").click()}
+              onClick={() =>
+                document.getElementById("fileInput").click()
+              }
               whileHover={{ scale: 1.005 }}
               whileTap={{ scale: 0.995 }}
-              animate={dragActive ? { scale: 1.02 } : { scale: 1 }}
+              animate={
+                dragActive
+                  ? { scale: 1.02 }
+                  : { scale: 1 }
+              }
             >
               <input
                 id="fileInput"
@@ -600,6 +766,7 @@ function AtsCheckerPage() {
                 }}
                 hidden
               />
+
               <AnimatePresence mode="wait">
                 {file ? (
                   <motion.p
@@ -618,7 +785,8 @@ function AtsCheckerPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    Drag & drop your resume, or click to browse (PDF, DOCX or TXT, max 10 MB)
+                    Drag & drop your resume, or click to browse
+                    (PDF, DOCX or TXT, max 10 MB)
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -627,6 +795,7 @@ function AtsCheckerPage() {
 
           <div className="form-group">
             <label>Target role</label>
+
             <input
               type="text"
               className="text-input"
@@ -643,9 +812,14 @@ function AtsCheckerPage() {
               whileHover={!loading ? { scale: 1.02 } : {}}
               whileTap={!loading ? { scale: 0.98 } : {}}
             >
-              {loading ? <span className="spinner"></span> : "Analyze my resume"}
+              {loading ? (
+                <span className="spinner"></span>
+              ) : (
+                "Analyze my resume"
+              )}
             </motion.button>
-            {(file || targetRole || result) && (
+
+            {(file || targetRole !== DEFAULT_TARGET_ROLE || result) && (
               <motion.button
                 type="button"
                 className="secondary"
@@ -666,8 +840,9 @@ function AtsCheckerPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                Still working on it… The server may be waking up after being idle, so the first
-                request can take up to a minute.
+                Still working on it… The server may be waking up
+                after being idle, so the first request can take
+                up to a minute.
               </motion.p>
             )}
           </AnimatePresence>
@@ -684,13 +859,21 @@ function AtsCheckerPage() {
                 <p className="error">{error}</p>
 
                 {sessionExpired && (
-                  <button type="button" className="retry-btn" onClick={handleVerifyAgain}>
+                  <button
+                    type="button"
+                    className="retry-btn"
+                    onClick={handleVerifyAgain}
+                  >
                     Verify email again
                   </button>
                 )}
 
                 {retryable && !loading && (
-                  <button type="button" className="retry-btn" onClick={runAnalysis}>
+                  <button
+                    type="button"
+                    className="retry-btn"
+                    onClick={runAnalysis}
+                  >
                     Try again
                   </button>
                 )}
@@ -699,6 +882,7 @@ function AtsCheckerPage() {
           </AnimatePresence>
         </motion.form>
 
+        {/* ANALYSIS RESULT */}
         <AnimatePresence>
           {result && (
             <motion.div
@@ -720,65 +904,109 @@ function AtsCheckerPage() {
                   ATS score for <b>{result.target_role}</b>
                 </p>
 
-                <p className="verdict">{result.overall_verdict}</p>
+                <p className="verdict">
+                  {result.overall_verdict}
+                </p>
 
                 <div className="gx-stats">
                   <div className="gx-stat">
-                    <b className="ok">{result.strengths?.length ?? 0}</b>
+                    <b className="ok">
+                      {result.strengths?.length ?? 0}
+                    </b>
                     <span>Strengths</span>
                   </div>
+
                   <div className="gx-stat">
-                    <b className="bad">{result.weaknesses?.length ?? 0}</b>
+                    <b className="bad">
+                      {result.weaknesses?.length ?? 0}
+                    </b>
                     <span>Weaknesses</span>
                   </div>
+
                   <div className="gx-stat">
-                    <b className="warn">{result.missing_skills?.length ?? 0}</b>
+                    <b className="warn">
+                      {result.missing_skills?.length ?? 0}
+                    </b>
                     <span>Missing skills</span>
                   </div>
                 </div>
               </motion.div>
 
               <div className="result-grid">
-                {result.category_scores && result.category_scores.length > 0 && (
-                  <motion.div
-                    className="grid-box category-section"
-                    initial="hidden"
-                    animate="visible"
-                    custom={1}
-                    variants={fadeUp}
-                  >
-                    <h3>Score by category</h3>
-                    {result.category_scores.map((cat, i) => (
-                      <div key={cat.category} className="accordion-item">
+                {result.category_scores &&
+                  result.category_scores.length > 0 && (
+                    <motion.div
+                      className="grid-box category-section"
+                      initial="hidden"
+                      animate="visible"
+                      custom={1}
+                      variants={fadeUp}
+                    >
+                      <h3>Score by category</h3>
+
+                      {result.category_scores.map((cat, i) => (
                         <div
-                          className="accordion-header"
-                          onClick={() => setExpandedCategory(expandedCategory === i ? null : i)}
+                          key={cat.category}
+                          className="accordion-item"
                         >
-                          <span className="category-name">{cat.category}</span>
-                          <div className="accordion-right">
-                            <span className={`mini-score ${cat.score >= 70 ? "fill-high" : cat.score >= 40 ? "fill-mid" : "fill-low"}`}>
-                              {cat.score}%
+                          <div
+                            className="accordion-header"
+                            onClick={() =>
+                              setExpandedCategory(
+                                expandedCategory === i ? null : i
+                              )
+                            }
+                          >
+                            <span className="category-name">
+                              {cat.category}
                             </span>
-                            <span className={`accordion-arrow ${expandedCategory === i ? "open" : ""}`}>▾</span>
+
+                            <div className="accordion-right">
+                              <span
+                                className={`mini-score ${
+                                  cat.score >= 70
+                                    ? "fill-high"
+                                    : cat.score >= 40
+                                    ? "fill-mid"
+                                    : "fill-low"
+                                }`}
+                              >
+                                {cat.score}%
+                              </span>
+
+                              <span
+                                className={`accordion-arrow ${
+                                  expandedCategory === i ? "open" : ""
+                                }`}
+                              >
+                                ▾
+                              </span>
+                            </div>
                           </div>
+
+                          <AnimatePresence>
+                            {expandedCategory === i && (
+                              <motion.div
+                                className="accordion-body"
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{
+                                  height: "auto",
+                                  opacity: 1,
+                                }}
+                                exit={{
+                                  height: 0,
+                                  opacity: 0,
+                                }}
+                                transition={{ duration: 0.25 }}
+                              >
+                                <p>{cat.reason}</p>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
-                        <AnimatePresence>
-                          {expandedCategory === i && (
-                            <motion.div
-                              className="accordion-body"
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.25 }}
-                            >
-                              <p>{cat.reason}</p>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
+                      ))}
+                    </motion.div>
+                  )}
 
                 {result.strengths && result.weaknesses && (
                   <motion.div
@@ -789,24 +1017,38 @@ function AtsCheckerPage() {
                     variants={fadeUp}
                   >
                     <h3>Overall Balance</h3>
+
                     <div className="balance-bar-bg">
                       <motion.div
                         className="balance-bar-fill"
                         initial={{ width: 0 }}
                         animate={{
-                          width: `${Math.round(
-                            (result.strengths.length /
-                              (result.strengths.length + result.weaknesses.length)) *
-                            100
-                          )}%`,
+                          width: `${
+                            result.strengths.length +
+                              result.weaknesses.length ===
+                            0
+                              ? 0
+                              : Math.round(
+                                  (result.strengths.length /
+                                    (result.strengths.length +
+                                      result.weaknesses.length)) *
+                                    100
+                                )
+                          }%`,
                         }}
-                        transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-                      ></motion.div>
+                        transition={{
+                          duration: 0.8,
+                          delay: 0.5,
+                          ease: "easeOut",
+                        }}
+                      />
                     </div>
+
                     <div className="balance-labels">
                       <span className="balance-label-strength">
                         {result.strengths.length} Strengths
                       </span>
+
                       <span className="balance-label-weakness">
                         {result.weaknesses.length} Weaknesses
                       </span>
@@ -823,10 +1065,16 @@ function AtsCheckerPage() {
                   custom={3}
                   variants={fadeUp}
                 >
-                  <h3><span className="dot success"></span>Strengths</h3>
+                  <h3>
+                    <span className="dot success"></span>
+                    Strengths
+                  </h3>
+
                   <ul className="ai-list">
                     {result.strengths?.map((item, i) => (
-                      <li key={i} className="strength-item">{item}</li>
+                      <li key={i} className="strength-item">
+                        {item}
+                      </li>
                     ))}
                   </ul>
                 </motion.div>
@@ -838,10 +1086,16 @@ function AtsCheckerPage() {
                   custom={4}
                   variants={fadeUp}
                 >
-                  <h3><span className="dot danger"></span>Weaknesses</h3>
+                  <h3>
+                    <span className="dot danger"></span>
+                    Weaknesses
+                  </h3>
+
                   <ul className="ai-list">
                     {result.weaknesses?.map((item, i) => (
-                      <li key={i} className="weakness-item">{item}</li>
+                      <li key={i} className="weakness-item">
+                        {item}
+                      </li>
                     ))}
                   </ul>
                 </motion.div>
@@ -855,9 +1109,12 @@ function AtsCheckerPage() {
                 variants={fadeUp}
               >
                 <h3>Missing skills</h3>
+
                 <div className="keyword-tags missing">
                   {result.missing_skills?.map((kw) => (
-                    <span key={kw} className="tag">{kw}</span>
+                    <span key={kw} className="tag">
+                      {kw}
+                    </span>
                   ))}
                 </div>
               </motion.div>
@@ -870,9 +1127,12 @@ function AtsCheckerPage() {
                 variants={fadeUp}
               >
                 <h3>💡 Suggestions</h3>
+
                 <ul className="ai-list suggestions">
                   {result.suggestions?.map((item, i) => (
-                    <li key={i} className="suggestion-item">{item}</li>
+                    <li key={i} className="suggestion-item">
+                      {item}
+                    </li>
                   ))}
                 </ul>
               </motion.div>
@@ -881,6 +1141,7 @@ function AtsCheckerPage() {
         </AnimatePresence>
       </div>
 
+      {/* AI CHAT BUTTON AND PANEL */}
       {result && (
         <>
           <motion.button
@@ -890,7 +1151,11 @@ function AtsCheckerPage() {
             whileTap={{ scale: 0.95 }}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+            transition={{
+              delay: 0.3,
+              type: "spring",
+              stiffness: 300,
+            }}
           >
             {chatOpen ? "✕" : "💬"}
           </motion.button>
@@ -899,34 +1164,66 @@ function AtsCheckerPage() {
             {chatOpen && (
               <motion.div
                 className="chat-panel"
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                initial={{
+                  opacity: 0,
+                  y: 30,
+                  scale: 0.95,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  y: 30,
+                  scale: 0.95,
+                }}
                 transition={{ duration: 0.25 }}
               >
                 <div className="chat-panel-header">
                   <span>💬 Ask AI about your resume</span>
-                  <button className="chat-close" onClick={() => setChatOpen(false)}>✕</button>
+
+                  <button
+                    className="chat-close"
+                    onClick={() => setChatOpen(false)}
+                  >
+                    ✕
+                  </button>
                 </div>
 
                 <div className="chat-box">
                   {chatMessages.length === 0 && (
                     <p className="chat-placeholder">
-                      Ask a follow-up question — e.g. "How do I fix the formatting issue?" or "What project should I add?"
+                      Ask a follow-up question — e.g.
+                      "How do I fix the formatting issue?"
+                      or "What project should I add?"
                     </p>
                   )}
+
                   <div className="chat-messages">
                     {chatMessages.map((msg, i) => (
                       <motion.div
                         key={i}
-                        className={`chat-bubble ${msg.role === "user" ? "chat-user" : "chat-ai"}`}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        className={`chat-bubble ${
+                          msg.role === "user"
+                            ? "chat-user"
+                            : "chat-ai"
+                        }`}
+                        initial={{
+                          opacity: 0,
+                          y: 10,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
                         transition={{ duration: 0.3 }}
                       >
                         {msg.content}
                       </motion.div>
                     ))}
+
                     {chatLoading && (
                       <motion.div
                         className="chat-bubble chat-ai chat-typing"
@@ -938,11 +1235,15 @@ function AtsCheckerPage() {
                         <span className="typing-dot"></span>
                       </motion.div>
                     )}
+
                     <div ref={chatEndRef}></div>
                   </div>
                 </div>
 
-                <form className="chat-input-row" onSubmit={handleChatSend}>
+                <form
+                  className="chat-input-row"
+                  onSubmit={handleChatSend}
+                >
                   <input
                     type="text"
                     className="text-input"
@@ -950,6 +1251,7 @@ function AtsCheckerPage() {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                   />
+
                   <motion.button
                     type="submit"
                     disabled={chatLoading || !chatInput.trim()}

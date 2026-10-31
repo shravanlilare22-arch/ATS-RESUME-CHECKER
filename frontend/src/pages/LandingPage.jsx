@@ -1,9 +1,11 @@
+
 import { useState, useEffect, useRef } from "react";
 import logo from "../assets/logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NameEmailModal from "../components/NameEmailModal";
 import { saveVisitor } from "../services/api";
+import { getProfilePhoto } from "../services/profileStore";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -119,9 +121,8 @@ const NAV_LINKS = [
   { label: "Tips", icon: "tips", target: "tips" },
 ];
 
-// ================= PAGE CONTENT (yahan se text badal sakte ho) =================
+// ================= PAGE CONTENT =================
 
-// "Built for Job Seekers" ke 4 stats (sab tumhare app ke asli facts)
 const STATS = [
   { icon: "users", value: "3", title: "Free Analyses Daily", desc: "Check your resume every day at no cost." },
   { icon: "trend", value: "10 MB", title: "Max File Size", desc: "Upload PDF, DOCX or TXT files up to 10 MB." },
@@ -206,8 +207,6 @@ const COMPARE = [
   { label: "AI Chat About Your Resume", others: false },
 ];
 
-// Asli feedback aaye to yahan jodo, section apne aap dikhne lagega.
-// Format: { name: "Name", role: "Student", text: "Their feedback" }
 const FEEDBACK = [];
 
 // ================= STEP ILLUSTRATIONS =================
@@ -320,6 +319,7 @@ function LandingPage() {
   const [showVisitorModal, setShowVisitorModal] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [logoOpen, setLogoOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   // Load saved visitor profile from localStorage
   const [user, setUser] = useState(() => {
@@ -332,6 +332,9 @@ function LandingPage() {
     }
   });
 
+  // Profile page me save ki hui photo
+  const photo = user ? getProfilePhoto(user.email) : "";
+
   // Mobile menu khula ho to page scroll band
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -340,12 +343,15 @@ function LandingPage() {
     };
   }, [menuOpen]);
 
-  // Logo preview khula ho to: Esc se band + page scroll band
+  // Logo aur profile photo preview: Escape + background scroll lock
   useEffect(() => {
-    if (!logoOpen) return;
+    if (!logoOpen && !photoOpen) return;
 
     const onKey = (e) => {
-      if (e.key === "Escape") setLogoOpen(false);
+      if (e.key === "Escape") {
+        setLogoOpen(false);
+        setPhotoOpen(false);
+      }
     };
 
     document.addEventListener("keydown", onKey);
@@ -355,7 +361,7 @@ function LandingPage() {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [logoOpen]);
+  }, [logoOpen, photoOpen]);
 
   // Dropdown ke bahar click karne pe band
   useEffect(() => {
@@ -367,6 +373,14 @@ function LandingPage() {
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
+
+  // Profile photo click
+  const handlePhotoPreview = (e) => {
+    e.stopPropagation();
+    if (photo) {
+      setPhotoOpen(true);
+    }
+  };
 
   // ================= SCROLL =================
   const scrollToSection = (id) => {
@@ -382,7 +396,6 @@ function LandingPage() {
 
   const handleNavClick = (id) => {
     setMenuOpen(false);
-    // drawer band hone ke baad scroll, taaki body overflow ka issue na ho
     setTimeout(() => scrollToSection(id), 50);
   };
 
@@ -416,7 +429,6 @@ function LandingPage() {
       navigate("/ats-score");
     } catch (error) {
       console.error("Visitor submission failed:", error);
-      // NameEmailModal ko error dikhane ke liye wapas throw
       throw error;
     }
   };
@@ -449,7 +461,6 @@ function LandingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Logo pe click -> bada preview */}
         <button
           type="button"
           className="lp-brand"
@@ -473,7 +484,6 @@ function LandingPage() {
         </nav>
 
         <div className="lp-nav-right">
-          {/* Desktop: user chip / Get Started */}
           <div className="lp-desktop-only">
             {user ? (
               <div className="lp-profile-wrap" ref={profileRef}>
@@ -482,7 +492,17 @@ function LandingPage() {
                   onClick={() => setProfileOpen((prev) => !prev)}
                 >
                   <span className="lp-avatar">
-                    {user.name.charAt(0).toUpperCase()}
+                    {photo ? (
+                      <img
+                        src={photo}
+                        alt="Profile photo"
+                        onClick={handlePhotoPreview}
+                        style={{ cursor: "zoom-in" }}
+                        title="Click to zoom"
+                      />
+                    ) : (
+                      user.name.charAt(0).toUpperCase()
+                    )}
                   </span>
                   {user.name}
                   <Icon name="chevron" size={16} className="lp-chev" />
@@ -498,8 +518,16 @@ function LandingPage() {
                       transition={{ duration: 0.2 }}
                     >
                       <div className="lp-user-box">
-                        <div className="lp-avatar big">
-                          {user.name.charAt(0).toUpperCase()}
+                        <div
+                          className="lp-avatar big"
+                          onClick={handlePhotoPreview}
+                          style={{ cursor: photo ? "zoom-in" : "default" }}
+                        >
+                          {photo ? (
+                            <img src={photo} alt="Profile photo" />
+                          ) : (
+                            user.name.charAt(0).toUpperCase()
+                          )}
                         </div>
                         <div className="lp-user-info">
                           <strong>{user.name}</strong>
@@ -607,8 +635,16 @@ function LandingPage() {
               {user ? (
                 <>
                   <div className="lp-drawer-user">
-                    <div className="lp-avatar big">
-                      {user.name.charAt(0).toUpperCase()}
+                    <div
+                      className="lp-avatar big"
+                      onClick={handlePhotoPreview}
+                      style={{ cursor: photo ? "zoom-in" : "default" }}
+                    >
+                      {photo ? (
+                        <img src={photo} alt="Profile photo" />
+                      ) : (
+                        user.name.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div className="lp-user-info">
                       <strong>{user.name}</strong>
@@ -714,7 +750,6 @@ function LandingPage() {
           </motion.div>
         </div>
 
-        {/* Sample report card (sirf demo ke liye) */}
         <motion.div
           className="lp-card"
           initial="hidden"
@@ -791,7 +826,7 @@ function LandingPage() {
         ))}
       </section>
 
-      {/* ================= BUILT FOR JOB SEEKERS (stats) ================= */}
+      {/* ================= BUILT FOR JOB SEEKERS ================= */}
       <section className="lp-sec">
         <motion.div
           className="lp-panel"
@@ -821,7 +856,7 @@ function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ================= HOW OUR FREE RESUME SCANNER WORKS ================= */}
+      {/* ================= HOW IT WORKS ================= */}
       <section className="lp-sec" id="how-it-works">
         <h2 className="lp-sec-h">How our free resume scanner works</h2>
         <p className="lp-sec-sub">
@@ -999,7 +1034,7 @@ function LandingPage() {
         </button>
       </section>
 
-      {/* ================= WHAT OUR USERS SAY (sirf tab dikhega jab FEEDBACK me data ho) ================= */}
+      {/* ================= USER FEEDBACK ================= */}
       {FEEDBACK.length > 0 && (
         <section className="lp-sec">
           <h2 className="lp-sec-h">What our users say</h2>
@@ -1105,6 +1140,68 @@ function LandingPage() {
               >
                 Check my resume →
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= PROFILE PHOTO ZOOM PREVIEW ================= */}
+      <AnimatePresence>
+        {photoOpen && photo && (
+          <motion.div
+            className="pf-lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setPhotoOpen(false)}
+            style={{ cursor: "zoom-out" }}
+          >
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 220, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+              }}
+            >
+              <button
+                type="button"
+                className="pf-lightbox-close"
+                onClick={() => setPhotoOpen(false)}
+                aria-label="Close profile photo"
+                style={{
+                  position: "absolute",
+                  top: "-16px",
+                  right: "-16px",
+                  zIndex: 5,
+                }}
+              >
+                <Icon name="close" size={20} />
+              </button>
+
+              <img
+                src={photo}
+                alt={`${user?.name || "User"} profile photo`}
+                style={{
+                  display: "block",
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "85vw",
+                  maxHeight: "85vh",
+                  objectFit: "contain",
+                  borderRadius: "12px",
+                  boxShadow: "0 15px 60px rgba(0,0,0,0.45)",
+                  cursor: "default",
+                }}
+              />
             </motion.div>
           </motion.div>
         )}
